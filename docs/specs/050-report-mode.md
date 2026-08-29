@@ -50,11 +50,16 @@ Steps:
   `resources/`;
 - **judge step**: weigh evidence, write `report.md` per the contract.
 
-Shipshape validates frontmatter + sections; an invalid report goes back to
-the agent once with the validation errors; a second failure marks the task
-failed. Report-mode agents get read-only tools; `needsExecution: true`
-assessors additionally get Bash confined to a scratch copy of the target
-(see `build-test-locally`), still without network tools.
+Shipshape validates frontmatter + sections (including that the title matches
+the assessor — title drift is the early symptom of a judge inventing its own
+rubric); an invalid report goes back to the agent once with the validation
+errors — a missing report re-runs the full judgment against saved evidence —
+and a second failure marks the task failed. Report-mode agents get
+Read/Glob/Grep plus Write/Edit for their output directory; `needsExecution:
+true` assessors additionally get Bash with scratch-copy instructions (see
+`build-test-locally`), never network tools. Target repos are verified
+git-clean after recon and after every assessment; a stray write fails the
+task.
 
 ### 4. Synthesize (tier: synthesize)
 

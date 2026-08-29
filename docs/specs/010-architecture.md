@@ -91,11 +91,18 @@ A thin, uniform wrapper over the Agent SDK:
   `judge: claude-sonnet-…`). An assessor step names a tier, never a model, so
   cost posture is entirely a profile decision. A single assessor may use
   multiple tiers across its steps (cheap scan pass, expensive judgment pass).
-- **Permissions**: report-mode agents get read-only tools (Read/Glob/Grep,
-  plus Bash restricted to the target when an assessor declares
-  `needsExecution: true`, e.g. the build-and-test assessor). Doctor-mode fix
-  agents additionally get write + git on a dedicated branch. Agents never get
-  network tools.
+- **Permissions**: every agent runs with a restricted base toolset
+  (`tools` + `allowedTools` set to exactly the grant, `acceptEdits` mode, no
+  target settings loaded). Report-mode agents get Read/Glob/Grep plus
+  Write/Edit for their own output directory — the write confinement is
+  prompt-level (absolute output paths) and **verified** after every task by
+  git-status checks on the targets, which fail the task on stray writes.
+  Bash is granted only to recon and `needsExecution: true` assessors
+  (instructed read-only / scratch-copy usage; see THREAT_MODEL.md for the
+  honest limits of prompt-level confinement). Doctor-mode fix agents get
+  write + git inside a dedicated per-branch worktree; non-worktree doctor
+  agents are covered by the same working-tree verification. Agents never
+  get network tools.
 - **Cost ledger**: every SDK result's usage is appended to `costs.json` keyed
   by task id and tier, so reports can state what the run cost.
 - **Failure**: a task's agent failure (SDK error, contract-violating output)

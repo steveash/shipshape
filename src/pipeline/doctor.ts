@@ -103,6 +103,11 @@ export async function runDoctor(opts: DoctorRunOptions): Promise<{ failed: numbe
   const cleanAtStart = new Map<string, boolean>(
     targetSet.targets.filter((t) => t.isGitRepo).map((t) => [t.path, isClean(t.path)]),
   );
+  // Fix branches accepted under --max-branches (resume counts prior work).
+  let acceptedFixCount = [...records.values()].filter(
+    (r) => r.status !== 'planned' && r.status !== 'dropped',
+  ).length;
+
   const verifyWorkingTreesUntouched = (taskId: string): void => {
     for (const [path, wasClean] of cleanAtStart) {
       if (wasClean && !isClean(path)) {
@@ -215,13 +220,15 @@ Then reply with a summary including any dropped or not-staged findings.`,
     if (!record) throw new Error(`no fix record for ${slug}`);
     const def = byId.get(record.assessorId);
     if (!def) throw new Error(`unknown assessor ${record.assessorId}`);
-    if (opts.maxBranches !== null) {
-      const started = [...records.values()].filter((r) => r.status !== 'planned').length;
-      if (started >= opts.maxBranches && record.status === 'planned') {
+    if (opts.maxBranches !== null && record.status === 'planned') {
+      // Claim a slot synchronously before any await so concurrent fix tasks
+      // cannot all pass the check at once.
+      if (acceptedFixCount >= opts.maxBranches) {
         records.set(slug, { ...record, status: 'dropped' });
         persistRecords();
         return { note: `dropped: --max-branches ${opts.maxBranches} reached` };
       }
+      acceptedFixCount += 1;
     }
 
     const wt = worktreeFor(slug);

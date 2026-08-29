@@ -32,8 +32,11 @@ node dist/cli.js doctor ./shipshape-out/<run-id>
 ```
 
 Requires Node >= 20 and a working Claude Code / `ANTHROPIC_API_KEY`
-environment (agents run through the Claude Agent SDK). Runs cost real money;
-start with `--profile cheap` and see `--dry-run`.
+environment (agents run through the Claude Agent SDK). Runs cost real money:
+observed on a mid-size repo, a full 25-assessor `cheap` run ≈ $50 and ~100
+minutes (≈ $0.50-2 per assessor), a bounded doctor run (2 assessors, 4
+branches with adversarial review) ≈ $13. Start with `--dry-run`, a single
+`--assessor`, or a `budgets.maxUsd` ceiling in your profile.
 
 Useful variants:
 
