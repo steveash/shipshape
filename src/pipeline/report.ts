@@ -218,7 +218,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
         tier: 'scan',
         prompt: joinBlocks(
           base,
-          `## Current step: EVIDENCE SCAN\n\nDo NOT write report.md yet. Execute the evidence-gathering portion of your instructions and write your raw findings, inventories, and intermediate results as files under ${join(outDir, 'resources')}/ (absolute path; include a scan-notes.md index summarizing what you collected and where). A later judgment step will read them.`,
+          `## Current step: EVIDENCE SCAN\n\nDo NOT write report.md yet. Execute the evidence-gathering portion of your instructions and write your raw findings, inventories, and intermediate results as files under ${join(outDir, 'resources')}/ (absolute path; include a scan-notes.md index summarizing what you collected and where). A later judgment step will read them.\n\nBudget your turns: you have a hard turn limit, so save partial results to resources/ as you go — breadth of saved evidence beats depth on one thread. Sampling caps in your instructions are ceilings, not quotas.`,
           retryContext(task),
         ),
         systemPrompt,
@@ -231,7 +231,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
 
     const judgePrompt = joinBlocks(
       base,
-      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ${join(outDir, 'resources')}/. Weigh the evidence, complete any missing verification yourself, then write the report.\n\nAnchor strictly on THIS assessor's rubric above — judge only what '${def.id}' measures, not general quality. Every finding must cite specific files in the target repositories; a generic report that could have been written without reading this repo is a failed report.`,
+      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ${join(outDir, 'resources')}/. Weigh the evidence, complete any missing verification yourself, then write the report.\n\nAnchor strictly on THIS assessor's rubric above — judge only what '${def.id}' measures, not general quality. Every finding must cite specific files in the target repositories; a generic report that could have been written without reading this repo is a failed report.\n\nBudget your turns: you have a hard turn limit, and a run that ends without the report written is a failed run. Write a complete draft of the report once you have enough evidence for a defensible verdict — well before the limit — then refine it with any remaining budget.`,
       reportContract(def.id, outDir),
       retryContext(task),
     );
@@ -249,18 +249,27 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     let validation = validateAssessorReport(join(outDir, 'report.md'), def.id, def.title);
     if (!validation.ok) {
       log.warn(`${task.id}: report invalid, bouncing for repair: ${validation.errors.join('; ')}`);
+      const reportMissing = !existsSync(join(outDir, 'report.md'));
+      // A merely-invalid report gets a cheap contract-repair round; a missing
+      // one (typically a judge that ran out of turns while exploring) gets
+      // the full judgment prompt again, leaning on the saved evidence.
       const repair = await runner.run({
         taskId: `${task.id}#repair`,
         tier: 'judge',
-        prompt: joinBlocks(
-          `Your report at ${join(outDir, 'report.md')} failed contract validation with these errors:\n\n${validation.errors.map((e) => `- ${e}`).join('\n')}`,
-          reportContract(def.id, outDir),
-          'Fix the report in place so it passes. Do not change your judgment, only the contract violations.',
-        ),
+        prompt: reportMissing
+          ? joinBlocks(
+              judgePrompt,
+              `## Urgency\n\nA previous attempt ran out of turns before writing the report. Read the saved evidence under ${join(outDir, 'resources')}/ first, keep any further exploration minimal, and write the complete report EARLY in this run.`,
+            )
+          : joinBlocks(
+              `Your report at ${join(outDir, 'report.md')} failed contract validation with these errors:\n\n${validation.errors.map((e) => `- ${e}`).join('\n')}`,
+              reportContract(def.id, outDir),
+              'Fix the report in place so it passes. Do not change your judgment, only the contract violations.',
+            ),
         systemPrompt,
         cwd: outDir,
-        tools: READ_WRITE_TOOLS,
-        maxTurns: 15,
+        tools,
+        maxTurns: reportMissing ? undefined : 15,
       });
       if (!repair.ok) throw new Error(repair.error ?? 'report repair failed');
       validation = validateAssessorReport(join(outDir, 'report.md'), def.id, def.title);
