@@ -1,0 +1,14 @@
+# Lowest-cost posture: same assessors as balanced, small models everywhere,
+# tighter turn budget. Good for a first look or frequent re-runs.
+name: cheap
+extends: balanced
+
+models:
+  scan: haiku
+  judge: haiku
+  synthesize: sonnet
+  fix: sonnet
+  review: sonnet
+
+budgets:
+  maxTurnsPerTask: 40

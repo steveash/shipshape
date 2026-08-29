@@ -1,0 +1,53 @@
+# The default profile: full assessor library, cheap models for wide scanning,
+# frontier models only where judgment quality pays (synthesis, fix review).
+# cheap.yaml and thorough.yaml extend this and change only cost posture —
+# the assessor set stays identical (see docs/specs/030-profiles.md).
+name: balanced
+
+models:
+  scan: haiku
+  judge: sonnet
+  synthesize: opus
+  fix: sonnet
+  review: opus
+
+concurrency: 4
+budgets:
+  maxTurnsPerTask: 60
+  maxUsd: null
+
+assessors:
+  # docs
+  - id: agents-md-quality
+    weight: 2
+  - id: architecture-docs
+  - id: spec-organization
+  - id: dev-environment-docs
+  - id: doc-freshness
+  # process
+  - id: review-process
+    weight: 2
+  - id: reviewer-agents
+  - id: security-reviewer
+  - id: doc-drift-automation
+  - id: git-history-hygiene
+  - id: task-handoff
+  # enforcement
+  - id: build-test-locally
+    weight: 2
+  - id: quality-gate-parity
+  - id: commit-hooks
+  - id: code-quality-linters
+  - id: architecture-linters
+  - id: enforcement-hierarchy
+    weight: 2
+  - id: test-trustworthiness
+  - id: ci-agent-safety
+  # legibility
+  - id: codebase-orientation
+  - id: concept-clarity
+  - id: abstraction-consistency
+  - id: control-flow-legibility
+  # operations
+  - id: context-economy
+  - id: model-cost-discipline

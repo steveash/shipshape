@@ -1,0 +1,19 @@
+# CI runs the exact same script as local dev (scripts/gate.sh), in --check
+# mode, so local and CI can never drift. See AGENTS.md.
+name: ci
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: ./scripts/gate.sh --check

@@ -1,0 +1,8 @@
+node_modules/
+dist/
+shipshape-out/
+*.tsbuildinfo
+.DS_Store
+# Tool-personal agent files stay local; AGENTS.md is the committed canonical doc.
+CLAUDE.local.md
+.claude/settings.local.json
