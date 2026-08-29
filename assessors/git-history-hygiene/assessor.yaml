@@ -1,0 +1,27 @@
+id: git-history-hygiene
+title: Git history vs stated process (runtime check)
+category: process
+summary: >
+  The git history shows the documented process actually happening: commits
+  reference the issues/specs the repo claims to work from, docs move in the
+  same commits as the code they describe, messages explain why, and merge
+  shapes match the claimed PR flow. Read-only git inspection only.
+practice: >
+  Process docs are claims; git history is evidence. A repo that documents
+  issue-first development, doc-with-code commits, and PR flow either shows
+  those patterns in its last hundred commits or it doesn't — and agents
+  learn the repo's real conventions from history, not from aspiration.
+  Commit messages that explain why are durable memory for every future
+  session; bare "fix" messages and model-output dumps are memory loss.
+  Comparing stated process to practiced process is the only honest way to
+  score this.
+tiers: [scan, judge]
+needsExecution: true
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Recent commits to sample for message/linkage/doc-coupling analysis.
+  commitSampleSize: 100
+  # Merge-shaped commits (PR evidence) to sample for PR-flow analysis.
+  prSampleSize: 30

@@ -70,7 +70,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     mkdirSync(outDir, { recursive: true });
     const prompt = joinBlocks(
       targetsBlock(targetSet),
-      reconPrompt(),
+      reconPrompt(outDir),
       conventionsBlock(profile.conventions, null),
       retryContext(task),
     );
@@ -100,7 +100,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     const prompt = joinBlocks(
       targetsBlock(targetSet),
       reconBlock(runDir),
-      planPrompt(roster),
+      planPrompt(roster, planPath),
       conventionsBlock(profile.conventions, null),
       retryContext(task),
     );
@@ -207,7 +207,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
         tier: 'scan',
         prompt: joinBlocks(
           base,
-          `## Current step: EVIDENCE SCAN\n\nDo NOT write report.md yet. Execute the evidence-gathering portion of your instructions and write your raw findings, inventories, and intermediate results as files under ./resources/ (with a resources/scan-notes.md index summarizing what you collected and where). A later judgment step will read them.`,
+          `## Current step: EVIDENCE SCAN\n\nDo NOT write report.md yet. Execute the evidence-gathering portion of your instructions and write your raw findings, inventories, and intermediate results as files under ${join(outDir, 'resources')}/ (absolute path; include a scan-notes.md index summarizing what you collected and where). A later judgment step will read them.`,
           retryContext(task),
         ),
         systemPrompt,
@@ -220,8 +220,8 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
 
     const judgePrompt = joinBlocks(
       base,
-      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ./resources/. Weigh the evidence, complete any missing verification yourself, then write ./report.md.`,
-      reportContract(def.id),
+      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ${join(outDir, 'resources')}/. Weigh the evidence, complete any missing verification yourself, then write the report.`,
+      reportContract(def.id, outDir),
       retryContext(task),
     );
     const judgeResult = await runner.run({
@@ -242,9 +242,9 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
         taskId: `${task.id}#repair`,
         tier: 'judge',
         prompt: joinBlocks(
-          `Your report at ./report.md failed contract validation with these errors:\n\n${validation.errors.map((e) => `- ${e}`).join('\n')}`,
-          reportContract(def.id),
-          'Fix ./report.md in place so it passes. Do not change your judgment, only the contract violations.',
+          `Your report at ${join(outDir, 'report.md')} failed contract validation with these errors:\n\n${validation.errors.map((e) => `- ${e}`).join('\n')}`,
+          reportContract(def.id, outDir),
+          'Fix the report in place so it passes. Do not change your judgment, only the contract violations.',
         ),
         systemPrompt,
         cwd: outDir,
@@ -340,12 +340,12 @@ function retryContext(task: TaskNode): string | null {
   return `## Previous attempt failed\n\nYour previous attempt at this task failed with: ${task.error}\nAvoid repeating that failure.`;
 }
 
-function reconPrompt(): string {
+function reconPrompt(outDir: string): string {
   return `## Your job: reconnaissance
 
-Explore the target packages (read-only; use Bash only for read-only commands like git log/ls) and write two files into your current working directory:
+Explore the target packages (read-only; use Bash only for read-only commands like git log/ls) and write two files into ${outDir} (absolute paths):
 
-1. repo-map.md — orientation for ~25 downstream assessor agents who will each judge one best practice. Cover:
+1. ${outDir}/repo-map.md — orientation for ~25 downstream assessor agents who will each judge one best practice. Cover:
    - What this system is and does (from its own docs), languages, rough size.
    - Package inventory: for a monorepo or multi-target set, every package with path, language, build tool.
    - Build/test/lint entry points as documented (do not run builds; record what the docs claim).
@@ -354,13 +354,13 @@ Explore the target packages (read-only; use Bash only for read-only commands lik
    - Git shape: default branch, rough commit cadence, whether history suggests squash-merges/PRs (git log --oneline sampling).
    - Notable oddities downstream assessors should know (generated dirs, vendored code, submodules, meta-repo relationships).
 
-2. packages.json — machine-readable inventory:
+2. ${outDir}/packages.json — machine-readable inventory:
    { "packages": [ { "name": str, "path": str, "language": str, "buildTool": str|null, "testCommand": str|null, "agentDocs": [str], "notes": str } ] }
 
 Be precise with paths (absolute), be honest about uncertainty, and keep repo-map.md under ~300 lines — it is injected into every downstream agent's context.`;
 }
 
-function planPrompt(roster: object[]): string {
+function planPrompt(roster: object[], planPath: string): string {
   return `## Your job: select and focus assessors
 
 Below is the assessor roster for this run. Decide for each whether it applies to this target set, and give applicable ones a focus hint (which packages/paths matter most, what the recon suggests deserves attention). Skip an assessor ONLY when its subject cannot exist here (e.g. a CI-agent-safety assessor on a repo with no agent workflows) — "the repo will probably score low" is a reason to run, never to skip. When in doubt, run it.
@@ -368,7 +368,7 @@ Below is the assessor roster for this run. Decide for each whether it applies to
 Roster:
 ${JSON.stringify(roster, null, 2)}
 
-Write ./plan.json (in your current working directory):
+Write ${planPath} (absolute path):
 { "assessors": [ { "id": "<id>", "run": true|false, "reason": "<required when run=false>", "focus": "<hint when run=true>" } ] }
 
 Include every roster id exactly once. Then reply with a one-paragraph summary of your plan.`;

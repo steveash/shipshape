@@ -23,10 +23,10 @@ Scoring rules:
 - Distinguish deliberate conventions from neglect (e.g. a gitignored CLAUDE.md alongside a committed AGENTS.md is a portability choice, not a gap). Check .gitignore before penalizing absence.
 - Report confidence (high/medium/low) separately instead of hedging the level.`;
 
-export function reportContract(assessorId: string): string {
+export function reportContract(assessorId: string, outDir: string): string {
   return `## Output contract (mandatory)
 
-Write your report to ./report.md (your current working directory is your assessor output directory). Ancillary files go under ./resources/ in any format; they are your working memory for a later fix phase, so keep them structured and self-explanatory.
+Write your report to ${outDir}/report.md (use this absolute path). Ancillary files go under ${outDir}/resources/ in any format; they are your working memory for a later fix phase, so keep them structured and self-explanatory.
 
 report.md MUST begin with YAML frontmatter exactly in this shape:
 
@@ -55,7 +55,7 @@ Then these sections, in order, all present (write "None." under a section with n
 
 In Opportunities, number each finding, order by impact, and for each give: what and where (paths), why it matters, and a tactical suggestion. Mark findings that a later automated fix phase should implement with a line starting exactly "**Fix:**" followed by a one-line fix description. Only mark fixes that are safe, reviewable changes (docs, config, hooks, small refactors) — not sweeping rewrites.
 
-Do not modify anything outside your output directory. The target repositories are read-only evidence.`;
+Do not modify anything outside ${outDir}. The target repositories are read-only evidence.`;
 }
 
 export function targetsBlock(targetSet: TargetSet): string {

@@ -1,0 +1,23 @@
+id: task-handoff
+title: Task handoff and context survival
+category: process
+summary: >
+  Work survives context loss: plan and task-state files live where the
+  harness re-injects them, progress and handoff conventions exist, and
+  reusable templates are kept free of any single run's results.
+practice: >
+  Agent context dies constantly — compaction, session ends, handoffs to a
+  new agent — and real harnesses preserve almost nothing across it: the
+  recently-read files, the invoked skills, and the active plan file by
+  name. Conversation and rationale are gone. Work therefore survives only
+  in the durable channels: git history, a progress log, a machine-readable
+  task-state file, and agent config. Repos that keep plans in known
+  locations, record progress as they go, and write handoffs while context
+  is still healthy let a fresh agent resume mid-task; repos that keep the
+  plan in the conversation lose the work with the window.
+tiers: [judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig: {}

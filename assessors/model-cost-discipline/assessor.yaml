@@ -1,0 +1,24 @@
+id: model-cost-discipline
+title: Model routing, caps, and cost discipline
+category: operations
+summary: >
+  Model usage is routed and guarded like any other dependency: model choice
+  tiered by task, pinned model IDs treated as versioned dependencies with
+  an update policy, every agent loop capped by attempts/turns/budget, and
+  deterministic scripts used where no LLM is needed at all.
+practice: >
+  Agent workflows spend real money and depend on models that deprecate like
+  any versioned dependency — one provider deprecated a model seven weeks
+  after shipping its successor. Repos that route cheap models to mechanical
+  steps and frontier models to synthesis, that use aliases or routing
+  instead of scattered hardcoded IDs, and that cap every loop with attempt
+  limits and budget ceilings get predictable cost and graceful upgrades.
+  The strongest discipline is knowing when not to use a model: a
+  deterministic script that replaces an LLM step wins on cost, latency, and
+  reliability at once.
+tiers: [judge]
+needsExecution: false
+appliesTo: has-agent-workflows
+canReview: false
+reviewsCategories: []
+defaultConfig: {}

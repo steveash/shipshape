@@ -1,0 +1,24 @@
+id: code-quality-linters
+title: Linters own style so prose doesn't have to
+category: enforcement
+summary: >
+  Per language, linters, formatters, and type-checkers are configured with
+  real strictness and mechanically enforced (CI and/or hooks), and the agent
+  docs do not restate rules the tools already enforce — prose carries only
+  the judgment calls no linter can make.
+practice: >
+  Deterministic tools for deterministic work. A linter enforces a rule at
+  ~100% for zero context cost; prose enforces it at ~70-80% while taxing
+  every session. Measured: LLM-written agent docs restating lintable rules
+  cost >20% more inference and reduced task success. The mature shape is
+  strict tool configs (mypy strict, typed eslint rules, clippy), enforced in
+  CI and pre-commit, with rationale comments on every override — and agent
+  docs that mention style only where a tool cannot decide.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Max agent-doc rules to classify as lintable-vs-judgment (sampling cap).
+  maxDocRulesToClassify: 40

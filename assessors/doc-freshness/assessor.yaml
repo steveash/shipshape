@@ -1,0 +1,26 @@
+id: doc-freshness
+title: Doc freshness (docs vs code today)
+category: docs
+summary: >
+  The docs tell the truth about the code as it is today: no stale status
+  claims on shipped code, no spec'd features silently missing from code or
+  code features missing from specs, no version/count drift, and staleness
+  metadata where the repo tracks it.
+practice: >
+  Agents believe the docs. A docstring saying "scaffold stub, not
+  implemented" atop working code makes an agent reimplement or route
+  around a subsystem that already works; a skill doc telling agents to
+  skip a fully functional gate disables the gate. Stale claims are worse
+  than missing docs because they carry authority. Freshness is verifiable
+  claim by claim — read the code each claim describes — and repos that
+  keep docs current mechanically (docs-in-same-commit conventions,
+  generated sections, scheduled drift detection) stay truthful without
+  relying on memory.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many doc claims to verify against code (sampling cap).
+  maxClaimsToCheck: 30

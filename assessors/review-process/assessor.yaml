@@ -1,0 +1,25 @@
+id: review-process
+title: Documented review process (verification stack)
+category: process
+summary: >
+  A review process is written down where both humans and agents will find it,
+  with local (pre-PR) review first, enumerable criteria instead of vibes, and
+  a cheapest-first verification stack in which each layer is a net for the
+  next.
+practice: >
+  Review is where agent-generated volume either gets absorbed or breaks the
+  team. The working ideal is a stack ordered by cost — deterministic tools,
+  then hooks, then CI, then agent review, then human review — with each
+  cheaper layer catching what it can so the scarcer layer sees only what
+  remains. A process that exists only in reviewers' heads is invisible to
+  agents; a checklist whose criteria amount to "is it good?" invites
+  early-victory rubber-stamping. Documented, enumerable, cheapest-first
+  review is what lets throughput rise without quality falling.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Cap on review-related docs/configs to inventory in depth.
+  maxDocsToInventory: 25

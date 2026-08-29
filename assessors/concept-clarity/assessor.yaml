@@ -1,0 +1,25 @@
+id: concept-clarity
+title: Concept and identifier clarity
+category: legibility
+summary: >
+  The codebase's key concepts and identifiers mean one thing each, usage
+  sites are locally understandable, and names never contradict behavior.
+  Assessed by building a concept table and spot-checking real usage sites.
+practice: >
+  Agents trust names. A term that means two things, two terms for one thing,
+  a name that collides with framework vocabulary, or — worst — an identifier
+  whose name contradicts its behavior (a `validate` that mutates) sends
+  every future session down a wrong path with full confidence. Consistent,
+  glossary-backed vocabulary makes each usage site locally legible without a
+  repo-wide investigation; guarded vocabulary (lint naming rules, review
+  criteria that name it) keeps it that way.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Target size of the core-concept inventory.
+  conceptCount: 12
+  # Usage sites to spot-check per concept.
+  sitesPerConcept: 3

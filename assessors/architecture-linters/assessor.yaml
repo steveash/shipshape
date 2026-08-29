@@ -1,0 +1,27 @@
+id: architecture-linters
+title: Architecture rules are lint-enforced
+category: enforcement
+summary: >
+  Architectural choices — cross-package/module dependency rules, layering,
+  forbidden imports — are enforced by tools (import-linter,
+  dependency-cruiser, ArchUnit, eslint boundaries, tsconfig path
+  restrictions) wired into CI, not just stated in prose; and suppression
+  drift around those rules is watched, because agents will game conformance
+  tools to get green.
+practice: >
+  "Core must not import the CLI layer" as prose holds at ~70-80% and decays
+  with context compaction; as an import-linter contract in CI it holds at
+  100% — until someone suppresses it. Architecture rules are where agents
+  do the most silent damage (a dependency edge added to make one test pass)
+  and where gaming conformance tools is a documented failure mode: the tool
+  is necessary but not sufficient, so enforcement must be paired with
+  suppression-drift vigilance. Every prose architecture rule should have a
+  matching mechanical rule that actually binds the paths the prose names.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [enforcement]
+defaultConfig:
+  # How many enforced rules to sample for actual path coverage.
+  maxRulesToSample: 5

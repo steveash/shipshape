@@ -66,9 +66,13 @@ export class AgentRunner {
         cwd: req.cwd,
         model,
         systemPrompt: req.systemPrompt,
+        // The base tool set is restricted to exactly the granted tools and
+        // each granted tool is auto-allowed, so no permission prompts occur
+        // in headless runs. acceptEdits (not bypassPermissions) keeps this
+        // working under root/sandboxed environments too.
         tools: req.tools,
         allowedTools: req.tools,
-        permissionMode: 'bypassPermissions',
+        permissionMode: 'acceptEdits',
         maxTurns: req.maxTurns ?? this.opts.maxTurnsDefault,
         // Do not load user/project Claude settings into shipshape's agents:
         // the target repo's CLAUDE.md must be evidence, not instructions.

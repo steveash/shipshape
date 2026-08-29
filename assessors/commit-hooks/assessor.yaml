@@ -1,0 +1,22 @@
+id: commit-hooks
+title: Git and harness hooks enforce the process
+category: enforcement
+summary: >
+  Git hooks (pre-commit, husky, lefthook, core.hooksPath) and — where an
+  agent harness exists — harness hooks force the documented process
+  mechanically, are actually installed via a documented or automated
+  bootstrap, and run the real gate rather than a subset.
+practice: >
+  Prose rules are advisory; hooks are mechanical. Measured reliability:
+  settings-permissions and blocking hooks enforce at ~100%, CI at 100% but
+  post-hoc, advisory prose at ~70-80%. A measured harness pattern: prose-rule
+  compliance of ~60-80% jumped to 90%+ once the rules became blocking hooks.
+  But a hook config nobody installs enforces nothing — installation must be
+  documented or, better, bootstrapped automatically — and a hook that runs a
+  subset of the gate trains people to distrust it.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig: {}
