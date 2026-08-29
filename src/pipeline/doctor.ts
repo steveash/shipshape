@@ -97,6 +97,22 @@ export async function runDoctor(opts: DoctorRunOptions): Promise<{ failed: numbe
 
   const worktreeFor = (slug: string): string => join(doctorDir, 'worktrees', slug);
 
+  // The user's working trees must stay untouched through all of doctor mode:
+  // fixes happen only in dedicated worktrees. Verify after every task that
+  // runs an agent outside a worktree.
+  const cleanAtStart = new Map<string, boolean>(
+    targetSet.targets.filter((t) => t.isGitRepo).map((t) => [t.path, isClean(t.path)]),
+  );
+  const verifyWorkingTreesUntouched = (taskId: string): void => {
+    for (const [path, wasClean] of cleanAtStart) {
+      if (wasClean && !isClean(path)) {
+        throw new Error(
+          `${taskId} modified the working tree of ${path}; doctor agents may only write inside their worktrees. Inspect and clean the repo, then resume.`,
+        );
+      }
+    }
+  };
+
   graph.on('fix-plan', async (task) => {
     const assessorId = task.params.assessorId as string;
     const def = byId.get(assessorId);
@@ -114,7 +130,7 @@ Turn the findings marked "**Fix:**" into a plan of git branches. Each branch is 
 
 Only plan safe, reviewable changes. A finding too large or risky to stage should be listed in your reply as deliberately not staged, with the reason — it will be reported to humans rather than silently lost.
 
-Write ./plan.json in your current working directory:
+Write your plan to ${join(doctorDir, 'plans', assessorId, 'plan.json')} — this exact absolute path; write nothing anywhere else, and never into the target repositories:
 { "fixes": [ { "slug", "targetPath", "findings": [n], "planSummary", "impact", "effort", "dependsOn": [] } ] }
 
 Then reply with a summary including any dropped or not-staged findings.`,
@@ -136,9 +152,19 @@ Then reply with a summary including any dropped or not-staged findings.`,
     });
     if (!result.ok) throw new Error(result.error ?? 'fix-plan agent failed');
     const rawPlanPath = join(planWorkDir, 'plan.json');
-    if (!existsSync(rawPlanPath)) throw new Error('fix-plan agent did not write plan.json');
-    const parsed = fixPlanSchema.safeParse(JSON.parse(readFileSync(rawPlanPath, 'utf8')));
+    // Prefer the file; fall back to JSON embedded in the reply.
+    let rawPlan: unknown;
+    if (existsSync(rawPlanPath)) {
+      rawPlan = JSON.parse(readFileSync(rawPlanPath, 'utf8'));
+    } else {
+      const m = /\{[\s\S]*"fixes"[\s\S]*\}/.exec(result.text);
+      if (!m) throw new Error(`fix-plan agent wrote neither ${rawPlanPath} nor inline JSON`);
+      rawPlan = JSON.parse(m[0]);
+      writeFileSync(rawPlanPath, JSON.stringify(rawPlan, null, 2));
+    }
+    const parsed = fixPlanSchema.safeParse(rawPlan);
     if (!parsed.success) throw new Error(`plan.json invalid: ${parsed.error.message}`);
+    verifyWorkingTreesUntouched(task.id);
     writeFileSync(planPath, JSON.stringify(parsed.data, null, 2));
     if (result.text.trim().length > 0) {
       writeFileSync(join(doctorDir, 'plans', `${assessorId}-notes.md`), result.text);
@@ -335,6 +361,7 @@ followed by your reasoning with citations into the diff.`,
       verdicts.push({ reviewer: reviewer.id, ...parsed.review });
     }
 
+    verifyWorkingTreesUntouched(task.id);
     const worst = worstVerdict(verdicts.map((v) => v.verdict));
     const blocking = verdicts.flatMap((v) => v.blocking.map((b) => `[${v.reviewer}] ${b}`));
     const advisory = verdicts.flatMap((v) => v.advisory.map((a) => `[${v.reviewer}] ${a}`));
@@ -459,6 +486,7 @@ Rejected branches (branch name kept, with blocking reasons), dropped fixes, and 
     if (!existsSync(join(doctorDir, 'review-plan.md'))) {
       throw new Error('doctor-report did not write review-plan.md');
     }
+    verifyWorkingTreesUntouched(task.id);
   });
 
   // Seed graph: one fix-plan per fixable assessor, then the report.
