@@ -43,6 +43,7 @@ export interface ReportValidation {
 export function validateAssessorReport(
   reportPath: string,
   expectedAssessorId: string,
+  expectedTitle?: string,
 ): ReportValidation {
   const errors: string[] = [];
   if (!existsSync(reportPath)) {
@@ -62,6 +63,13 @@ export function validateAssessorReport(
       fm = result.data as ReportFrontmatter;
       if (fm.assessor !== expectedAssessorId) {
         errors.push(`frontmatter: assessor is '${fm.assessor}', expected '${expectedAssessorId}'`);
+      }
+      // Title anchoring: a drifted title is the early symptom of an agent
+      // that judged its own invented rubric instead of the assessor's.
+      if (expectedTitle && fm.title.trim() !== expectedTitle.trim()) {
+        errors.push(
+          `frontmatter: title must be exactly '${expectedTitle}' (got '${fm.title}'); re-anchor your report on this assessor's actual rubric`,
+        );
       }
     }
   } catch (err) {

@@ -1,0 +1,9 @@
+{
+  "assessors": [
+    {
+      "id": "agents-md-quality",
+      "run": true,
+      "focus": "Root AGENTS.md is the primary onboarding doc; verify it stays minimal (recon notes it's ~1 page) and that every reference it makes actually resolves: CLAUDE.md (stub that defers to AGENTS.md), ARCHITECTURE.md, THREAT_MODEL.md, docs/specs/000-overview.md and the ordered spec chain (010-070), docs/dev-process.md, and .claude/agents/ (arch-reviewer.md, prompt-reviewer.md) plus .claude/hooks/guard-bash.mjs and .claude/settings.json if cited. Check that stated hard rules (no editing dist/ or node_modules/, no force-push, no TypeScript in assessors/ or profiles/, cli->pipeline->core layering, report/review format-as-contract, tests never call the SDK) are still accurate against the current repo state (eslint.config.js layering rule, tests/data-validation.test.ts, .claude/settings.json deny/allow lists). Flag any stale, redundant, or low-value lines (context-cost discipline), and confirm CLAUDE.md doesn't duplicate content instead of deferring."
+    }
+  ]
+}

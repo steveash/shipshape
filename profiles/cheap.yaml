@@ -1,11 +1,13 @@
-# Lowest-cost posture: same assessors as balanced, small models everywhere,
-# tighter turn budget. Good for a first look or frequent re-runs.
+# Lowest-cost posture: same assessors as balanced, smallest models that
+# still produce grounded judgments, tighter turn budget. Good for a first
+# look or frequent re-runs. (Judgment stays on sonnet: haiku-tier judges
+# were observed drifting into generic, un-cited reports.)
 name: cheap
 extends: balanced
 
 models:
   scan: haiku
-  judge: haiku
+  judge: sonnet
   synthesize: sonnet
   fix: sonnet
   review: sonnet

@@ -1,0 +1,197 @@
+{
+  "scan_date": "2026-08-29",
+  "file_assessed": "/home/user/shipshape/AGENTS.md",
+  "total_references_checked": 13,
+  "summary": {
+    "total": 13,
+    "resolved": 13,
+    "broken": 0,
+    "resolution_rate_percent": 100
+  },
+  "references": [
+    {
+      "type": "command",
+      "reference": "./scripts/gate.sh",
+      "context": "line 10: quality gate entry point",
+      "status": "resolved",
+      "path": "/home/user/shipshape/scripts/gate.sh",
+      "exists": true,
+      "notes": "Executable bash script, single source of truth for dev/CI gate"
+    },
+    {
+      "type": "file_link",
+      "reference": "docs/specs/020-assessor-contract.md",
+      "context": "line 26: contract specification",
+      "status": "resolved",
+      "path": "/home/user/shipshape/docs/specs/020-assessor-contract.md",
+      "exists": true,
+      "notes": "Markdown file, describes assessor report format and maturity levels"
+    },
+    {
+      "type": "file_link",
+      "reference": "docs/dev-process.md",
+      "context": "line 33: smoke test and review process documentation",
+      "status": "resolved",
+      "path": "/home/user/shipshape/docs/dev-process.md",
+      "exists": true,
+      "notes": "Markdown file, describes local dev loop and pre-PR review"
+    },
+    {
+      "type": "file_link",
+      "reference": "ARCHITECTURE.md",
+      "context": "line 38: orientation to architecture",
+      "status": "resolved",
+      "path": "/home/user/shipshape/ARCHITECTURE.md",
+      "exists": true,
+      "notes": "Markdown file, canonical source for code layout and key decisions"
+    },
+    {
+      "type": "file_link",
+      "reference": "docs/specs/000-overview.md",
+      "context": "line 37: specs index and entry point",
+      "status": "resolved",
+      "path": "/home/user/shipshape/docs/specs/000-overview.md",
+      "exists": true,
+      "notes": "Markdown file, entry point to ordered spec chain (000-070)"
+    },
+    {
+      "type": "directory_link",
+      "reference": ".claude/agents/",
+      "context": "line 40: reviewer agents for pre-PR review",
+      "status": "resolved",
+      "path": "/home/user/shipshape/.claude/agents/",
+      "exists": true,
+      "contents": [
+        "arch-reviewer.md",
+        "prompt-reviewer.md"
+      ],
+      "notes": "Directory with two reviewer agents, used for local adversarial review"
+    },
+    {
+      "type": "code_reference",
+      "reference": "src/core/reportio.ts (zod schema)",
+      "context": "line 26: contract definition location",
+      "status": "resolved",
+      "path": "/home/user/shipshape/src/core/reportio.ts",
+      "exists": true,
+      "notes": "TypeScript file containing report frontmatter zod schema and validation"
+    },
+    {
+      "type": "code_reference",
+      "reference": "src/core/config.ts (zod schema)",
+      "context": "line 26: contract definition location",
+      "status": "resolved",
+      "path": "/home/user/shipshape/src/core/config.ts",
+      "exists": true,
+      "notes": "TypeScript file containing assessor config schema"
+    },
+    {
+      "type": "test_file_reference",
+      "reference": "tests/data-validation.test.ts",
+      "context": "line 50: shipped assessor/profile validation",
+      "status": "resolved",
+      "path": "/home/user/shipshape/tests/data-validation.test.ts",
+      "exists": true,
+      "notes": "Unit tests validating shipped assessor/profile data at build time"
+    },
+    {
+      "type": "enforcement_mechanism",
+      "reference": ".claude/settings.json (deny list)",
+      "context": "hard rule enforcement: force-push, dist/, node_modules/",
+      "status": "resolved",
+      "path": "/home/user/shipshape/.claude/settings.json",
+      "exists": true,
+      "enforces": [
+        "git push --force/-f (deny)",
+        "Edit/Write to dist/** (deny)",
+        "Edit/Write to node_modules/** (deny)"
+      ],
+      "notes": "Agent harness permissions configuration, enforced via SDK"
+    },
+    {
+      "type": "enforcement_mechanism",
+      "reference": ".claude/hooks/guard-bash.mjs",
+      "context": "PreToolUse hook that blocks AGENTS.md hard rules",
+      "status": "resolved",
+      "path": "/home/user/shipshape/.claude/hooks/guard-bash.mjs",
+      "exists": true,
+      "enforces": [
+        "force-push prohibition",
+        "destructive rm at root/home",
+        "writes to dist/ and node_modules/"
+      ],
+      "notes": "Node.js pre-tool-use hook, enforces hard rules at CLI tool invocation"
+    },
+    {
+      "type": "enforcement_mechanism",
+      "reference": "eslint.config.js (layering rules)",
+      "context": "hard rule enforcement: cli → pipeline → core layering",
+      "status": "resolved",
+      "path": "/home/user/shipshape/eslint.config.js",
+      "exists": true,
+      "enforces": [
+        "core must not import pipeline or cli (spec 010)",
+        "pipeline must not import cli"
+      ],
+      "notes": "ESLint configuration enforces architectural layering via no-restricted-imports"
+    },
+    {
+      "type": "workflow_file",
+      "reference": ".github/workflows/ci.yml",
+      "context": "CI runs same gate as local (./scripts/gate.sh --check)",
+      "status": "resolved",
+      "path": "/home/user/shipshape/.github/workflows/ci.yml",
+      "exists": true,
+      "verifies": "CI uses identical gate.sh as local dev",
+      "notes": "GitHub Actions workflow confirms 'local == CI' promise"
+    }
+  ],
+  "hard_rules_enforcement_audit": {
+    "never_edit_dist_or_node_modules": {
+      "documented_line": 19,
+      "enforcement_mechanisms": [
+        ".claude/settings.json deny list (line 8-9)",
+        ".claude/hooks/guard-bash.mjs rules (line 25-27)",
+        "eslint ignores (eslint.config.js)"
+      ],
+      "status": "fully_enforced"
+    },
+    "no_typescript_in_assessors_profiles": {
+      "documented_line": 20,
+      "enforcement_mechanisms": [
+        "tests/data-validation.test.ts (validates only yaml+md exist)",
+        "directory structure (no .ts files under assessors/ or profiles/)"
+      ],
+      "status": "structurally_enforced"
+    },
+    "layering_cli_pipeline_core": {
+      "documented_line": 22,
+      "enforcement_mechanisms": [
+        "eslint.config.js no-restricted-imports rules (line 20-34)"
+      ],
+      "status": "lint_enforced"
+    },
+    "contract_changes_require_spec_update": {
+      "documented_line": 25,
+      "enforcement_mechanisms": [
+        "arch-reviewer.md checks (spec honesty, contract parity)",
+        "data-validation.test.ts validates zod schemas match assessor.yaml"
+      ],
+      "status": "review_enforced"
+    },
+    "tests_never_call_sdk": {
+      "documented_line": 30,
+      "enforcement_mechanisms": [
+        "Code inspection (tests/ contains no SDK imports)",
+        "smoke test is manual, documented in docs/dev-process.md"
+      ],
+      "status": "code_discipline"
+    }
+  },
+  "vitest_reporter_verification": {
+    "documented_in_agents_md": "line 48: 'vitest reporter is `dot` on purpose (context economy)'",
+    "vitest_config_ts": "/home/user/shipshape/vitest.config.ts",
+    "actual_configuration": "reporters: 'dot'",
+    "status": "matches"
+  }
+}

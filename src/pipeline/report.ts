@@ -115,7 +115,18 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
       maxTurns: 20,
     });
     if (!result.ok) throw new Error(result.error ?? 'plan agent failed');
-    const parsed = planSchema.safeParse(JSON.parse(readFileSync(planPath, 'utf8')));
+    // Prefer the file; fall back to a JSON object embedded in the reply so a
+    // planner that answered inline instead of writing doesn't cost a retry.
+    let rawPlan: unknown;
+    if (existsSync(planPath)) {
+      rawPlan = JSON.parse(readFileSync(planPath, 'utf8'));
+    } else {
+      const m = /\{[\s\S]*"assessors"[\s\S]*\}/.exec(result.text);
+      if (!m) throw new Error(`plan agent wrote neither ${planPath} nor inline JSON`);
+      rawPlan = JSON.parse(m[0]);
+      writeFileSync(planPath, JSON.stringify(rawPlan, null, 2));
+    }
+    const parsed = planSchema.safeParse(rawPlan);
     if (!parsed.success) throw new Error(`plan.json invalid: ${parsed.error.message}`);
 
     const newTasks: NewTask[] = [];
@@ -220,7 +231,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
 
     const judgePrompt = joinBlocks(
       base,
-      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ${join(outDir, 'resources')}/. Weigh the evidence, complete any missing verification yourself, then write the report.`,
+      `## Current step: JUDGMENT AND REPORT\n\nEvidence collected so far (if any) is under ${join(outDir, 'resources')}/. Weigh the evidence, complete any missing verification yourself, then write the report.\n\nAnchor strictly on THIS assessor's rubric above — judge only what '${def.id}' measures, not general quality. Every finding must cite specific files in the target repositories; a generic report that could have been written without reading this repo is a failed report.`,
       reportContract(def.id, outDir),
       retryContext(task),
     );
@@ -235,7 +246,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     if (!judgeResult.ok) throw new Error(judgeResult.error ?? 'judge step failed');
 
     // Validate the report; bounce once with exact errors.
-    let validation = validateAssessorReport(join(outDir, 'report.md'), def.id);
+    let validation = validateAssessorReport(join(outDir, 'report.md'), def.id, def.title);
     if (!validation.ok) {
       log.warn(`${task.id}: report invalid, bouncing for repair: ${validation.errors.join('; ')}`);
       const repair = await runner.run({
@@ -252,7 +263,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
         maxTurns: 15,
       });
       if (!repair.ok) throw new Error(repair.error ?? 'report repair failed');
-      validation = validateAssessorReport(join(outDir, 'report.md'), def.id);
+      validation = validateAssessorReport(join(outDir, 'report.md'), def.id, def.title);
       if (!validation.ok) throw new Error(`report still invalid: ${validation.errors.join('; ')}`);
     }
     verifyTargetsStillClean(cleanBefore, task.id);
