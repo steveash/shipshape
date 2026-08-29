@@ -14,6 +14,8 @@ else
   echo "== prettier (auto) =="; npx prettier --write src tests
   echo "== eslint (--fix) ==";  npx eslint --fix src tests
 fi
-echo "== typecheck =="; npx tsc -p tsconfig.json --noEmit
-echo "== vitest ==";    npx vitest run
+# Build (not just --noEmit): a stale dist/ once shipped hours-old prompts to
+# a live run. The gate keeping dist/ current makes that class of bug extinct.
+echo "== build ==";  npx tsc -p tsconfig.json
+echo "== vitest =="; npx vitest run
 echo "gate: OK"

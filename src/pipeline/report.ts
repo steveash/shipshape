@@ -68,6 +68,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
   graph.on('recon', async (task) => {
     const outDir = join(runDir, 'recon');
     mkdirSync(outDir, { recursive: true });
+    const cleanBefore = targetCleanliness();
     const prompt = joinBlocks(
       targetsBlock(targetSet),
       reconPrompt(outDir),
@@ -86,6 +87,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     if (!result.ok) throw new Error(result.error ?? 'recon agent failed');
     if (!existsSync(join(outDir, 'repo-map.md')))
       throw new Error('recon did not write repo-map.md');
+    verifyTargetsStillClean(cleanBefore, task.id);
   });
 
   graph.on('plan', async (task) => {
@@ -328,6 +330,16 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
           `${taskId} modified target repo ${path}; report-mode agents must be read-only. Inspect and clean the repo, then resume.`,
         );
       }
+    }
+  }
+
+  // A target that starts dirty can't be covered by the read-only check —
+  // say so loudly instead of silently losing the guarantee.
+  for (const t of targetSet.targets) {
+    if (t.isGitRepo && !gitIsClean(t.path)) {
+      log.warn(
+        `target ${t.path} has uncommitted changes; the read-only verification cannot distinguish agent writes there`,
+      );
     }
   }
 
