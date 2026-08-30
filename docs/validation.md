@@ -56,8 +56,13 @@ with known ground truth:
   claims against workflow YAML and caught a fixer's mid-branch
   self-correction. `review-plan.md` ordered branches by
   impact-per-review-minute with per-branch "check by hand" notes. ~$13.
-- **Self-doctor** exercised branch-basing on the assessed HEAD (not
-  origin/HEAD) after that bug was found preparing the run.
+- **Self-doctor (2 assessors, cap 3)**: 7 branches planned, cap enforced
+  exactly, 2 approved and merged into this repo (the root-artifact cleanup +
+  guard test, and the task-handoff convention below), 1 rejected by the
+  adversarial reviewer for internally contradictory content — the reject
+  path doing its job. The revise cycle materially improved a fix (replacing
+  a .gitignore approach that would have blinded the cleanliness guard with
+  a failing-test guard, with the rationale written into the test).
 
 ## Multi-package / meta-repo / steering / resume
 
