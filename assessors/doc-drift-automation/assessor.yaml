@@ -1,0 +1,23 @@
+id: doc-drift-automation
+title: Doc-drift detection machinery
+category: process
+summary: >
+  An agent or workflow exists whose job is finding spec-code drift on a
+  cadence and proposing updates as PRs for human merge — the machinery that
+  prevents staleness, distinct from measuring today's staleness.
+practice: >
+  Docs drift the moment they are written; the only durable answer is
+  machinery that hunts for drift on a schedule and proposes fixes. The
+  proposals must land as ordinary PRs for human merge, never auto-commits:
+  the signals driving such a loop (code diffs, doc contents, tool output)
+  are untrusted input, and the PR is the governance mechanism. The
+  machinery also needs its own health checked — a studied memory store went
+  stale for about seven weeks while its updating workflow kept reporting
+  success, and only an independent ground-truth reconciliation caught it.
+  A green workflow is not the same as a working one.
+tiers: [judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig: {}

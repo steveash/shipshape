@@ -1,0 +1,23 @@
+id: agents-md-quality
+title: Agent onboarding docs (AGENTS.md)
+category: docs
+summary: >
+  The repo has a minimal, current, agent-discoverable onboarding doc
+  (AGENTS.md or equivalent) whose references all resolve and whose every line
+  earns its context cost.
+practice: >
+  Agents rebuild their understanding of a repo from text on every session. A
+  developer-written AGENTS.md that leads with prohibitions and surgical
+  rules, routes to deeper docs instead of duplicating them, and contains
+  nothing the agent could discover on its own measurably improves agent
+  success; auto-generated or bloated files measurably hurt it. One canonical
+  file with thin per-tool redirects beats parallel near-duplicates that
+  drift.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [docs]
+defaultConfig:
+  # How many referenced files/commands to verify per doc (sampling cap).
+  maxReferencesToCheck: 40

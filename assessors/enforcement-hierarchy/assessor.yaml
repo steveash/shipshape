@@ -1,0 +1,26 @@
+id: enforcement-hierarchy
+title: Every prohibition has a mechanical control
+category: enforcement
+summary: >
+  Every hard "never/always" rule in the repo's prose is reconciled against a
+  mechanical control — settings deny rule, blocking hook, CI gate, or
+  capability removal — and permission allowlists are granular and
+  least-privilege rather than blanket grants.
+practice: >
+  Controls have measured reliability tiers: settings.json permission deny
+  rules ~100%, blocking PreToolUse hooks ~100%, CI gates 100% but post-hoc,
+  advisory hooks ~85-90%, agent-doc prose ~70-80% (degrading after context
+  compaction), chat corrections ~50%. A never-class rule living only in
+  prose fails one session in four. The least-agency principle sharpens it:
+  prefer removing a capability over prompting against it — if a deleted
+  prod DB keeps you up at night, remove the delete verb from the tool list,
+  don't prompt please-don't. A repo with even one never-class rule and zero
+  settings/hooks/CI backing is a critical finding.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [enforcement]
+defaultConfig:
+  # Max prohibitions to extract and reconcile (sampling cap for huge docs).
+  maxProhibitionsToMap: 60

@@ -1,0 +1,25 @@
+id: spec-organization
+title: Spec and decision-log organization
+category: docs
+summary: >
+  Specs, plans, and decision logs are committed and ordered — index or
+  numbering, status markers, citable decision IDs — so agents can find what
+  matters as the document count grows, and rationale is written down at
+  decision time.
+practice: >
+  Agent-driven development produces documents fast, and an unordered pile
+  stops helping around a dozen files. Ordering signals (an index, stable
+  numbering, draft/active/superseded markers) let an agent tell what is
+  current; decision logs with stable IDs (D1..D33) let code cite the reason
+  it exists. Compaction destroys dialogue, so the "why" of a decision must
+  land in a committed file in the same change as the decision — anything
+  left in conversation is gone. Orphaned docs unreachable from any entry
+  point are invisible to top-down traversal, which is how agents read.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many decision-log IDs to spot-check for citation from code/docs.
+  maxDecisionCitationsToCheck: 25

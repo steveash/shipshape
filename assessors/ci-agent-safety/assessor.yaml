@@ -1,0 +1,25 @@
+id: ci-agent-safety
+title: Agents in CI run safely
+category: enforcement
+summary: >
+  Where agents run in CI/automation, the workflows are safe: no raw event
+  payloads interpolated into prompts, token scopes split by direction,
+  attempt caps and circuit breakers on loops, concurrency and budget
+  ceilings with rationale, shadow-first rollout for blocking gates, and
+  sandboxing where agents execute untrusted code.
+practice: >
+  An agent workflow is an internet-facing program that takes natural
+  language as input and holds a repo token. Interpolating
+  github.event.comment.body into a prompt is prompt injection by design;
+  the default GITHUB_TOKEN is repo-scoped and cross-repo reads fail
+  silently empty (a documented footgun); loops without consecutive-failure
+  breakers have burned ~250K API calls/day in a real harness; a studied
+  repo's cancel-in-progress:true killed 53 of 54 review runs before anyone
+  noticed. Safety here is mechanical settings on the workflow, not
+  intentions in the prompt.
+tiers: [judge]
+needsExecution: false
+appliesTo: has-agent-workflows
+canReview: false
+reviewsCategories: []
+defaultConfig: {}

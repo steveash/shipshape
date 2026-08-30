@@ -1,0 +1,26 @@
+id: control-flow-legibility
+title: Control-flow legibility and complexity budgets
+category: legibility
+summary: >
+  Complex branching and non-obvious control flow are either absent or
+  explained: comments state what the code cannot (invariants, whys, failure
+  modes), comment density matches complexity, and complexity is ideally
+  budgeted in CI. Assessed by sampling the repo's worst flows and judging
+  them locally.
+practice: >
+  An agent editing a deeply nested, comment-free function cannot know which
+  branch encodes a hard-won invariant and which is an accident — so it
+  breaks the invariant confidently. Comments earn their keep exactly where
+  they say what code cannot: whys, invariants, failure modes. Measured
+  industry data shows AI-assisted codebases accumulate a persistent ~40%
+  cognitive-complexity increase when unguarded; CI-enforced complexity
+  budgets are the countermeasure that keeps flows legible without relying
+  on anyone's restraint.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many worst-complexity sites to sample and judge.
+  sampleSize: 10

@@ -1,0 +1,28 @@
+id: test-trustworthiness
+title: The safety net can actually fail
+category: enforcement
+summary: >
+  The test suite is a real safety net: no lying tests (mocked
+  reimplementations, swallow-all harnesses, `|| true`), suppression drift is
+  bounded, every test CI claims to run actually runs, and — where cheap — a
+  mutation spot-check in a scratch copy proves a deliberate bug turns the
+  suite red.
+practice: >
+  Agents optimize for green, and a suite that cannot go red will happily
+  provide it. Named failure modes from studied repos: suites testing a mock
+  reimplementation instead of the real path, harnesses wrapping bodies in
+  try/except-continue, `|| true` in test scripts, always-green suites nobody
+  has watched fail, and suppression drift (noqa/eslint-disable/@ts-ignore/
+  skip/xfail) clustering exactly where the risk is. Watching a test go red
+  is only proof if someone checks why — so where cheap, this assessor breaks
+  something on purpose in a scratch copy and reports honestly what happened.
+tiers: [scan, judge]
+needsExecution: true
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Hard wall-clock budget for all execution, minutes.
+  maxMinutes: 15
+  # Whether to attempt the single-mutation spot check when cheap.
+  attemptMutationCheck: true

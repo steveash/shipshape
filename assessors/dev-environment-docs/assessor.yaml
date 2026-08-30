@@ -1,0 +1,25 @@
+id: dev-environment-docs
+title: Development environment docs
+category: docs
+summary: >
+  Local development is documented well enough for an autonomous agent:
+  setup, build, test, run, and debug are all written down, install steps
+  precede the commands that need them, commands agree across docs, and
+  monorepos carry a per-package command matrix where commands differ.
+practice: >
+  An autonomous agent follows the docs verbatim: a quickstart that invokes
+  a console script with no install step anywhere yields command-not-found;
+  a monorepo doc saying "run npm test" when packages need different
+  commands sends the agent to the wrong gate; the same operation
+  documented three ways with different paths forces the agent to guess
+  which doc is current. Complete, internally consistent dev-environment
+  docs are what let an agent go from clone to verified change without a
+  human unblocking it.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many documented commands to cross-check against scripts/config.
+  maxCommandsToCheck: 40

@@ -1,0 +1,26 @@
+id: reviewer-agents
+title: Adversarial reviewer agents
+category: process
+summary: >
+  Reviewer agents are defined and wired into the workflow: they run in a
+  separate context from authors, carry anti-sycophancy instructions and
+  enumerable criteria, cover fast and thorough paths plus architecture
+  consistency, and no agent both creates and approves the same content.
+practice: >
+  An agent reviewing its own output in the same context inherits its own
+  reasoning and confirms it — shared-context review is confirmation bias
+  with extra steps. Effective agent review is two-agent review: a reviewer
+  spawned in a fresh context, given the diff and the spec but denied the
+  author's reasoning, and explicitly instructed not to assume the work is
+  correct or the feedback valid. In a production security pipeline, adding
+  a verifier that never saw the finder's analysis roughly halved
+  non-exploitable findings. The separation is the mechanism; the prompt
+  framing keeps it honest.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [docs, process, legibility, operations]
+defaultConfig:
+  # Cap on reviewer definitions/prompts to analyze in depth.
+  maxReviewersToAnalyze: 15

@@ -1,0 +1,16 @@
+# Highest-quality posture: same assessors as balanced, frontier models for
+# all judgment work and a generous turn budget. Use for the report a team
+# will act on.
+name: thorough
+extends: balanced
+
+models:
+  scan: sonnet
+  judge: opus
+  synthesize: opus
+  fix: opus
+  review: opus
+
+concurrency: 3
+budgets:
+  maxTurnsPerTask: 100

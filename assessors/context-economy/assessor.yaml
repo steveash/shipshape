@@ -1,0 +1,29 @@
+id: context-economy
+title: Context-budget economy of the agent surface
+category: operations
+summary: >
+  The agent-facing surface respects the context budget: agent docs earn
+  their tokens, MCP servers are few and essential (skills/CLIs preferred),
+  documented commands use quiet/failure-only output flags, and long
+  procedures live in skills rather than the always-loaded doc.
+practice: >
+  Everything the harness loads — agent docs, MCP tool schemas, command
+  output — is charged against every turn of every session. An installed MCP
+  server costs thousands of tokens permanently whether used or not; a
+  verbose test command charges hundreds of lines of passing output to every
+  remaining turn; a procedure restated in AGENTS.md is paid on sessions
+  that never need it. Repos that curate this surface — few essential
+  servers, skills over schemas, quiet reporters, routed noise — leave
+  agents materially more budget for the actual work, and guarding the
+  budget mechanically keeps it from regrowing.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # MCP server count treated as the healthy budget (inclusive range).
+  mcpBudgetMin: 3
+  mcpBudgetMax: 6
+  # Steps above which an inline procedural section belongs in a skill.
+  procedureStepThreshold: 5

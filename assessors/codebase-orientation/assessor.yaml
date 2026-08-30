@@ -1,0 +1,24 @@
+id: codebase-orientation
+title: Codebase orientation (where does work belong?)
+category: legibility
+summary: >
+  Starting from the repo's own docs, an arriving agent can quickly locate
+  where a new feature or bug fix belongs. Assessed by walking invented,
+  repo-realistic tasks through the documented entry points — scenarios, not
+  vibes.
+practice: >
+  Every agent session starts with orientation: given a task, find the place
+  in the tree where the change belongs. When entry docs, layout sections,
+  directory names, and module headers form a trail that answers "where would
+  X go?", agents start productive work in minutes; when orientation only
+  works via grep and luck, every session pays a search tax and misplaced
+  changes multiply. Orientation quality is testable by scenario walking, and
+  it stays good only when something mechanical guards it.
+tiers: [judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many orientation scenarios to invent and walk (3-5 recommended).
+  scenarioCount: 4

@@ -1,0 +1,25 @@
+id: quality-gate-parity
+title: Quality gate parity (local == CI)
+category: enforcement
+summary: >
+  Lint, format, typecheck, and test exist as documented commands, and the
+  local gate and CI run the same single shared artifact — so "it passes
+  locally" reliably means "CI passes", and no code surface is orphaned from
+  the gate.
+practice: >
+  When docs prescribe one command set and CI runs another, the two drift, and
+  every drift is a red CI run an agent has to debug blind. The gold pattern
+  is one shared gate script — dev mode auto-fixes (format --fix), --check
+  mode verifies — invoked identically by the agent doc and by CI. In a
+  studied repo the historical #1 cause of red CI was agents running
+  lint+test but not format --check; the shared script with the auto-fix
+  asymmetry eliminated the class. Parity also means coverage: a gate that
+  CI-checks only some packages leaves whole sub-apps unguarded.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Max CI workflow files to analyze in detail (sampling cap for huge repos).
+  maxWorkflowsToAnalyze: 15

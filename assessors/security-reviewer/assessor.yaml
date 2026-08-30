@@ -1,0 +1,27 @@
+id: security-reviewer
+title: Dedicated security reviewer with threat context
+category: process
+summary: >
+  A dedicated security reviewer exists separately from code-quality review,
+  backed by durable repo-specific threat context (THREAT_MODEL.md or
+  equivalent) it references, with static analysis feeding it and blocking
+  gates rolled out gradually.
+practice: >
+  A generic reviewer prompt asked to judge both quality and security is
+  pulled in two directions and does neither well — measured CVE recall for
+  such combined reviewers ran around 49%. The working shape is a dedicated
+  security reviewer whose durable knowledge lives in a maintained threat
+  document, not in the prompt: keep the discovery agent's prompt simple,
+  because long prescriptive checklists reduce novel-bug discovery, and put
+  the package's specific concerns, pitfalls, and past incidents in
+  THREAT_MODEL.md where they persist across sessions. Static analysis runs
+  first and anchors the reviewer; blocking gates are earned through a
+  shadow rollout, not declared.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [enforcement, process]
+defaultConfig:
+  # Cap on security-relevant configs/docs to analyze in depth.
+  maxArtifactsToAnalyze: 20

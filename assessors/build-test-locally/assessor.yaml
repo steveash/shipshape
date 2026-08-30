@@ -1,0 +1,24 @@
+id: build-test-locally
+title: Build and test from the docs (runtime check)
+category: enforcement
+summary: >
+  An agent following only the committed documentation can actually set up,
+  build, and test the package. This assessor really runs the documented
+  commands in a scratch copy and reports where they break.
+practice: >
+  Every undocumented prerequisite or broken quickstart is friction paid by
+  every future human and agent session. The only honest way to assess it is
+  to follow the docs literally, the way an agent would, and record where they
+  fail. A harness that cannot run lint/format/typecheck/tests as documented
+  commands is not ready for agents at all.
+tiers: [judge]
+needsExecution: true
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # Hard wall-clock budget for all execution, minutes.
+  maxMinutes: 20
+  # Commands are run offline-first; set true only if the team's environment
+  # intends network installs to work (package registry access).
+  allowNetworkInstalls: true

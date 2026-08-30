@@ -1,0 +1,23 @@
+id: architecture-docs
+title: Architecture and layout docs
+category: docs
+summary: >
+  Architecture and code-layout choices are documented outside the agent
+  onboarding doc (ARCHITECTURE.md, design docs, ADRs), reachable from it,
+  and match the actual tree.
+practice: >
+  Agents plan changes against the architecture they can read, not the one in
+  the team's heads. Architecture docs that live outside the agent doc keep
+  the onboarding surface lean while staying one hop away; a repository-layout
+  section that matches the real tree lets an agent place new code correctly
+  on the first try. Layout sections that omit whole subsystems, or
+  architecture prose buried inside the agent doc, cost every session that
+  trusts them.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: true
+reviewsCategories: [docs]
+defaultConfig:
+  # How many code files to sample when checking code→doc traceability.
+  maxTraceabilitySamples: 20

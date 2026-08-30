@@ -1,0 +1,25 @@
+id: abstraction-consistency
+title: Abstraction consistency and duplication
+category: legibility
+summary: >
+  The same problem is solved the same way everywhere: one blessed pattern
+  per cross-cutting concern, no gratuitous duplication, abstractions at a
+  consistent altitude with clear seams. Assessed by sampling real concerns
+  across modules and hunting duplicate/diverged code.
+practice: >
+  An agent that learns how this repo handles errors, config, or IO in one
+  module reuses that pattern everywhere — unless the repo has three
+  competing patterns, in which case the agent adds a fourth. Copy-paste
+  duplication is worse than it looks because agents fix one copy and miss
+  the diverged twin. One pattern per concern, with duplication bounded and
+  deliberate, is what lets local reading generalize; guarded consistency
+  (shared helpers that lint/review rules point to, duplication detection in
+  CI) keeps agents from re-fragmenting it.
+tiers: [scan, judge]
+needsExecution: false
+appliesTo: always
+canReview: false
+reviewsCategories: []
+defaultConfig:
+  # How many cross-cutting concerns to sample (3-5 recommended).
+  concernCount: 4
