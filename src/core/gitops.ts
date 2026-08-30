@@ -15,6 +15,17 @@ export function currentBranch(repo: string): string {
   return git(repo, ['rev-parse', '--abbrev-ref', 'HEAD']);
 }
 
+/**
+ * The base for doctor fix branches: the target's checked-out HEAD — the state
+ * the assessment actually judged. (origin/HEAD can be far behind the branch
+ * under assessment; basing there would plan fixes against files that don't
+ * exist yet.) Detached HEAD falls back to the bare commit sha.
+ */
+export function assessedBase(repo: string): string {
+  const branch = currentBranch(repo);
+  return branch === 'HEAD' ? git(repo, ['rev-parse', 'HEAD']) : branch;
+}
+
 export function defaultBranch(repo: string): string {
   // Prefer origin/HEAD; fall back to main/master/current.
   try {
