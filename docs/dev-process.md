@@ -56,3 +56,16 @@ working tree is untouched.
 - Keep diffs scoped; assessor prompt edits and engine edits travel in
   separate commits.
 - Update docs in the same commit as the behavior they describe.
+
+## Task handoff
+
+This is a starting point, not settled team policy — extend it as real
+multi-session work exposes gaps.
+
+If a change is going to span more than one session, write a plan file at
+`docs/plans/<slug>.md` describing the goal and remaining steps, and
+reference it by name in the commit/PR (same convention as above:
+docs/dev-process.md:52-55). Before ending a session with unfinished work,
+append a dated note to the plan file's log section (or the commit body, per
+the same convention) saying what was done and what's left — so the next
+session, whoever runs it, doesn't have to re-derive it from the diff alone.
