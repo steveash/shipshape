@@ -102,7 +102,9 @@ program
   .description('Stage reviewed fix branches from a previous report run (local branches only)')
   .argument('<runDir>', 'a completed shipshape report run directory')
   .option('-a, --assessor <id...>', 'only stage fixes for these assessors')
-  .option('--max-branches <n>', 'cap the number of fix branches', (v) => parseInt(v, 10))
+  .option('--max-branches <n>', 'cap the number of fix branches (default 20)', (v) =>
+    parseInt(v, 10),
+  )
   .action(async (runDirArg: string, opts) => {
     const runDir = resolve(runDirArg);
     const manifest = loadManifest(runDir);
@@ -120,7 +122,9 @@ program
       targetSet,
       resolved,
       only: (opts.assessor as string[] | undefined) ?? [],
-      maxBranches: (opts.maxBranches as number | undefined) ?? null,
+      // Bounded by default: an unbounded doctor run over many fixable
+      // assessors is an unbounded spend (self-assessment finding).
+      maxBranches: (opts.maxBranches as number | undefined) ?? 20,
     });
     log.info(`review plan: ${join(runDir, 'doctor', 'review-plan.md')}`);
     process.exitCode = failed > 0 ? 2 : 0;

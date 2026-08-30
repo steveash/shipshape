@@ -7,7 +7,7 @@ export default tseslint.config(
   { ignores: ['dist/**', 'node_modules/**'] },
   ...tseslint.configs.recommended,
   {
-    files: ['src/**/*.ts', 'tests/**/*.ts'],
+    files: ['src/**/*.ts', 'tests/**/*.ts', '.claude/hooks/**/*.mjs'],
     rules: {
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
       '@typescript-eslint/no-explicit-any': 'error',
@@ -19,7 +19,16 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['**/pipeline/**', '**/cli/**'], message: 'core must not import pipeline or cli (spec 010 layering)' }] },
+        {
+          patterns: [
+            {
+              // cli.js matters too: the CLI entry is a file, not a directory,
+              // so a directory-only glob never binds it (found by self-assessment).
+              group: ['**/pipeline/**', '**/cli/**', '**/cli.js'],
+              message: 'core must not import pipeline or cli (spec 010 layering)',
+            },
+          ],
+        },
       ],
     },
   },
@@ -28,7 +37,11 @@ export default tseslint.config(
     rules: {
       'no-restricted-imports': [
         'error',
-        { patterns: [{ group: ['**/cli/**'], message: 'pipeline must not import cli (spec 010 layering)' }] },
+        {
+          patterns: [
+            { group: ['**/cli/**', '**/cli.js'], message: 'pipeline must not import cli (spec 010 layering)' },
+          ],
+        },
       ],
     },
   },

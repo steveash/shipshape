@@ -10,6 +10,9 @@ practices this tool preaches — it is run against itself.
 ./scripts/gate.sh
 ```
 
+One-time setup after clone: `npm install && ./scripts/install-hooks.sh`
+(wires the pre-commit hook that runs this same gate).
+
 Single source of truth: dev mode auto-fixes formatting/lint, CI runs the same
 script with `--check`. If it passes locally, CI passes. Never commit without
 a green gate. Never weaken a check to get green.
