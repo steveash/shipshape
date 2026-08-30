@@ -40,6 +40,8 @@ a green gate. Never weaken a check to get green.
 - Specs (ordered, start at 000): [docs/specs/000-overview.md](docs/specs/000-overview.md)
 - Architecture and layout: [ARCHITECTURE.md](ARCHITECTURE.md)
 - Local dev + review process: [docs/dev-process.md](docs/dev-process.md)
+- How behavior was validated (and the bug classes to not reintroduce):
+  [docs/validation.md](docs/validation.md)
 - Reviewer agents for pre-PR review: [.claude/agents/](.claude/agents/)
 
 ## Surgical rules (mistakes agents actually make here)
