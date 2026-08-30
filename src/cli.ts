@@ -167,9 +167,13 @@ program
     console.log(`profile '${resolved.profile.name}' is valid.`);
     console.log(`provider: ${describeProvider(resolved.profile.provider)}`);
     console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
-    const envKeys = Object.keys(resolved.profile.provider.env);
-    if (envKeys.length > 0) {
-      console.log(`sets runtime environment: ${envKeys.join(', ')} (review values before running)`);
+    const envEntries = Object.entries(resolved.profile.provider.env);
+    if (envEntries.length > 0) {
+      // Full values, not just keys: a traffic redirect hides in the value
+      // (e.g. ANTHROPIC_BASE_URL), and this is the reviewer's one chance to
+      // see it. Provider env is profile config, never secrets.
+      console.log('sets runtime environment:');
+      for (const [k, v] of envEntries) console.log(`  ${k}=${v}`);
     }
     for (const w of resolved.warnings) console.log(`WARN: ${w}`);
     const exec = resolved.assessors.filter((a) => a.needsExecution);

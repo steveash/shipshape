@@ -40,8 +40,8 @@ export interface ProviderConfig {
   baseUrl?: string;
   /** Bedrock: preferred cross-region inference profile prefix (-> ANTHROPIC_BEDROCK_REGION_PREFIX). */
   regionPrefix?: string;
-  /** Bedrock: service tier default|flex|priority (-> ANTHROPIC_BEDROCK_SERVICE_TIER). */
-  serviceTier?: string;
+  /** Bedrock: service tier (-> ANTHROPIC_BEDROCK_SERVICE_TIER). */
+  serviceTier?: 'default' | 'flex' | 'priority';
   /**
    * Extra environment for the agent runtime (e.g. AWS_PROFILE, model pins
    * like ANTHROPIC_DEFAULT_SONNET_MODEL). Keys are restricted to the

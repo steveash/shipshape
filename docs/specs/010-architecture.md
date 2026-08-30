@@ -8,8 +8,9 @@ Shipshape is a Node.js (>= 20) TypeScript CLI, distributed as an npm package
 with a `shipshape` bin. Agents are executed through the
 `@anthropic-ai/claude-agent-sdk` (`query()`), which drives the Claude Code
 runtime in headless mode. Authentication is whatever the invoking user's
-Claude Code / `ANTHROPIC_API_KEY` environment provides — shipshape adds no
-auth of its own.
+environment provides — Claude Code login / `ANTHROPIC_API_KEY`, or ambient
+AWS credentials when a profile selects the Bedrock provider (spec 030) —
+shipshape adds no auth of its own.
 
 ## Layering
 

@@ -44,7 +44,12 @@ node dist/cli.js report <some-small-repo> --profile cheap \
 ```
 
 Verify: run completes, `assessors/agents-md-quality/report.md` passes
-validation (the run fails loudly if not), findings cite real paths. For
+validation (the run fails loudly if not), findings cite real paths. The
+first time Bedrock support is exercised against real AWS credentials, run
+this same smoke with `--bedrock` and also confirm two claims spec 030 hedges
+(they depend on runtime behavior shipshape can't unit-test): model aliases
+resolve to Bedrock inference profiles, and the cost ledger's USD figures are
+sane for the partner-billed models. For
 doctor-mode changes, follow with `node dist/cli.js doctor <run-dir>` against
 a scratch clone and confirm branches + review-plan.md appear and the target's
 working tree is untouched.
