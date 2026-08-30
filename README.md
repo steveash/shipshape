@@ -45,9 +45,18 @@ node dist/cli.js report a/ b/ c/ --meta a/          # multi-package + meta-repo
 node dist/cli.js report repo/ -c team-conventions.md # steer all assessors
 node dist/cli.js report repo/ -a agents-md-quality   # single assessor
 node dist/cli.js report repo/ --resume <run-dir>     # resume an interrupted run
+node dist/cli.js report repo/ --bedrock              # run via Amazon Bedrock
 node dist/cli.js list-assessors
 node dist/cli.js validate my-profile.yaml            # + prints trust surface
 ```
+
+### Amazon Bedrock
+
+Add `--bedrock` (uses your ambient AWS credentials/region, like any AWS
+tool), or configure it durably in a profile — region, custom
+endpoint/gateway URL, service tier, and Bedrock model pins:
+see [examples/bedrock-profile.example.yaml](examples/bedrock-profile.example.yaml)
+and [docs/specs/030-profiles.md](docs/specs/030-profiles.md#providers-anthropic-api-vs-amazon-bedrock).
 
 ## Documentation
 

@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { z } from 'zod';
 import { AgentRunner } from '../core/agent.js';
-import type { ResolvedProfile } from '../core/config.js';
+import { providerEnv, type ResolvedProfile } from '../core/config.js';
 import { TaskGraph, graphFilePath, type NewTask } from '../core/graph.js';
 import { log } from '../core/log.js';
 import { validateAssessorReport } from '../core/reportio.js';
@@ -60,6 +60,7 @@ export async function runReport(opts: ReportRunOptions): Promise<{ failed: numbe
     models: profile.models,
     maxTurnsDefault: profile.budgets.maxTurnsPerTask,
     maxUsd: profile.budgets.maxUsd,
+    extraEnv: providerEnv(profile.provider),
     onBudgetExceeded: () => graph.stop(),
   });
 
@@ -459,6 +460,7 @@ function writeManifest(opts: ReportRunOptions): void {
     targets: opts.targetSet.targets.map((t) => ({ path: t.path, name: t.name, isMeta: t.isMeta })),
     profileName: opts.resolved.profile.name,
     profilePath: opts.resolved.profile.path,
+    provider: opts.resolved.profile.provider,
     models: opts.resolved.profile.models,
     conventions: opts.resolved.profile.conventions,
     assessorIds: opts.resolved.assessors.map((a) => a.id),

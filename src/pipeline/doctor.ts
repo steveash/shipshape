@@ -6,7 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node
 import { join } from 'node:path';
 import { z } from 'zod';
 import { AgentRunner } from '../core/agent.js';
-import type { ResolvedProfile } from '../core/config.js';
+import { providerEnv, type ResolvedProfile } from '../core/config.js';
 import { TaskGraph, graphFilePath, type NewTask } from '../core/graph.js';
 import {
   addWorktree,
@@ -69,6 +69,7 @@ export async function runDoctor(opts: DoctorRunOptions): Promise<{ failed: numbe
     models: profile.models,
     maxTurnsDefault: profile.budgets.maxTurnsPerTask,
     maxUsd: profile.budgets.maxUsd,
+    extraEnv: providerEnv(profile.provider),
     onBudgetExceeded: () => graph.stop(),
   });
 

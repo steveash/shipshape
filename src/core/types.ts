@@ -31,8 +31,28 @@ export interface ProfileAssessorEntry {
   config: Record<string, unknown>;
 }
 
+export interface ProviderConfig {
+  /** Which endpoint the Claude Code runtime should call. */
+  type: 'anthropic' | 'bedrock';
+  /** Bedrock: AWS region (-> AWS_REGION). Omit to use the ambient AWS config. */
+  region?: string;
+  /** Bedrock: custom endpoint/gateway URL (-> ANTHROPIC_BEDROCK_BASE_URL). */
+  baseUrl?: string;
+  /** Bedrock: preferred cross-region inference profile prefix (-> ANTHROPIC_BEDROCK_REGION_PREFIX). */
+  regionPrefix?: string;
+  /** Bedrock: service tier (-> ANTHROPIC_BEDROCK_SERVICE_TIER). */
+  serviceTier?: 'default' | 'flex' | 'priority';
+  /**
+   * Extra environment for the agent runtime (e.g. AWS_PROFILE, model pins
+   * like ANTHROPIC_DEFAULT_SONNET_MODEL). Keys are restricted to the
+   * AWS_/ANTHROPIC_/CLAUDE_CODE_ prefixes; see config.ts.
+   */
+  env: Record<string, string>;
+}
+
 export interface Profile {
   name: string;
+  provider: ProviderConfig;
   models: Record<ModelTier, string>;
   concurrency: number;
   budgets: { maxTurnsPerTask: number; maxUsd: number | null };
@@ -83,6 +103,13 @@ export interface RunManifest {
   targets: { path: string; name: string; isMeta: boolean }[];
   profileName: string;
   profilePath: string;
+  /**
+   * The provider the run actually used (including a --bedrock CLI flip).
+   * Resume and doctor honor this over the profile file so an interrupted
+   * Bedrock run can never silently revert to the Anthropic API. Absent on
+   * manifests from older versions.
+   */
+  provider?: ProviderConfig;
   models: Record<ModelTier, string>;
   conventions: string[];
   assessorIds: string[];

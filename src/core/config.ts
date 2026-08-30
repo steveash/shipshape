@@ -7,7 +7,13 @@ import { dirname, join, resolve, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
-import { MODEL_TIERS, type AssessorDef, type ModelTier, type Profile } from './types.js';
+import {
+  MODEL_TIERS,
+  type AssessorDef,
+  type ModelTier,
+  type Profile,
+  type ProviderConfig,
+} from './types.js';
 
 const CATEGORY = z.enum(['docs', 'process', 'enforcement', 'legibility', 'operations']);
 const TIER = z.enum(['scan', 'judge', 'synthesize', 'fix', 'review']);
@@ -33,9 +39,48 @@ const profileAssessorSchema = z.object({
   config: z.record(z.string(), z.unknown()).default({}),
 });
 
+// A profile can set extra env for the agent runtime, but only within the
+// provider-configuration namespaces. Arbitrary env injection from a profile
+// file (PATH, NODE_OPTIONS, ...) would let a shared profile execute code or
+// redirect traffic — this allowlist keeps the surface reviewable. It reduces
+// rather than eliminates the risk (see THREAT_MODEL.md item 6), so the keys
+// inside the namespaces that are themselves code-execution vectors are
+// denied outright: AWS_CONFIG_FILE / AWS_SHARED_CREDENTIALS_FILE can point
+// at a config with `credential_process = <command>`, and
+// CLAUDE_CODE_GIT_BASH_PATH names an executable the runtime will run.
+const PROVIDER_ENV_PREFIXES = ['AWS_', 'ANTHROPIC_', 'CLAUDE_CODE_'];
+const PROVIDER_ENV_DENIED = [
+  'AWS_CONFIG_FILE',
+  'AWS_SHARED_CREDENTIALS_FILE',
+  'CLAUDE_CODE_GIT_BASH_PATH',
+];
+
+const providerSchema = z.object({
+  // Optional (no zod default): a child layer that omits `type` must not
+  // clobber the parent's choice during extends merging.
+  type: z.enum(['anthropic', 'bedrock']).optional(),
+  region: z.string().optional(),
+  baseUrl: z.string().url().optional(),
+  regionPrefix: z.string().optional(),
+  serviceTier: z.enum(['default', 'flex', 'priority']).optional(),
+  env: z
+    .record(z.string(), z.string())
+    .default({})
+    .refine(
+      (env) => Object.keys(env).every((k) => PROVIDER_ENV_PREFIXES.some((p) => k.startsWith(p))),
+      {
+        message: `provider.env keys must start with one of: ${PROVIDER_ENV_PREFIXES.join(', ')}`,
+      },
+    )
+    .refine((env) => Object.keys(env).every((k) => !PROVIDER_ENV_DENIED.includes(k)), {
+      message: `provider.env must not set ${PROVIDER_ENV_DENIED.join(', ')} (code-execution vectors; set them in your own shell environment instead)`,
+    }),
+});
+
 const profileYamlSchema = z.object({
   name: z.string().min(1),
   extends: z.string().optional(),
+  provider: providerSchema.optional(),
   models: z.partialRecord(TIER, z.string()).default({}),
   concurrency: z.number().int().positive().max(16).optional(),
   budgets: z
@@ -123,6 +168,7 @@ const DEFAULT_MODELS: Record<ModelTier, string> = {
 /** Load a profile file, resolving single-inheritance extends; child wins, assessor entries merge by id. */
 export function loadProfile(path: string): Profile {
   const chain = loadRawProfile(path, new Set());
+  const provider: ProviderConfig = { type: 'anthropic', env: {} };
   const models = { ...DEFAULT_MODELS };
   let concurrency = 4;
   let maxTurnsPerTask = 60;
@@ -136,6 +182,18 @@ export function loadProfile(path: string): Profile {
 
   for (const layer of chain) {
     const layerDir = dirname(layer.path);
+    if (layer.provider) {
+      // Field-level merge so a child can flip provider type or add one env
+      // var without restating the parent's whole block.
+      if (layer.provider.type !== undefined) provider.type = layer.provider.type;
+      if (layer.provider.region !== undefined) provider.region = layer.provider.region;
+      if (layer.provider.baseUrl !== undefined) provider.baseUrl = layer.provider.baseUrl;
+      if (layer.provider.regionPrefix !== undefined)
+        provider.regionPrefix = layer.provider.regionPrefix;
+      if (layer.provider.serviceTier !== undefined)
+        provider.serviceTier = layer.provider.serviceTier;
+      provider.env = { ...provider.env, ...layer.provider.env };
+    }
     for (const t of MODEL_TIERS) {
       const m = layer.models[t];
       if (m) models[t] = m;
@@ -161,6 +219,7 @@ export function loadProfile(path: string): Profile {
   if (!last) throw new Error('empty profile chain');
   return {
     name: last.name,
+    provider,
     models,
     concurrency,
     budgets: { maxTurnsPerTask, maxUsd },
@@ -169,6 +228,25 @@ export function loadProfile(path: string): Profile {
     assessors: [...assessors.values()].filter((a) => a.enabled),
     path: last.path,
   };
+}
+
+/**
+ * Environment variables the agent runtime needs for the profile's provider
+ * (spec 030). Bedrock support works by configuring the Claude Code runtime's
+ * documented env surface — AWS credentials themselves are never handled by
+ * shipshape; they come from the invoking environment (AWS profile, keys,
+ * SSO, or AWS_BEARER_TOKEN_BEDROCK).
+ */
+export function providerEnv(provider: ProviderConfig): Record<string, string> {
+  const env: Record<string, string> = { ...provider.env };
+  if (provider.type === 'bedrock') {
+    env.CLAUDE_CODE_USE_BEDROCK = '1';
+    if (provider.region) env.AWS_REGION = provider.region;
+    if (provider.baseUrl) env.ANTHROPIC_BEDROCK_BASE_URL = provider.baseUrl;
+    if (provider.regionPrefix) env.ANTHROPIC_BEDROCK_REGION_PREFIX = provider.regionPrefix;
+    if (provider.serviceTier) env.ANTHROPIC_BEDROCK_SERVICE_TIER = provider.serviceTier;
+  }
+  return env;
 }
 
 export interface ResolvedProfile {

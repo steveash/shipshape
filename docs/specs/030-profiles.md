@@ -18,6 +18,18 @@ extends: balanced            # optional: a shipped profile name or a path;
                              # single inheritance, child keys win, assessor
                              # entries merge by id (config maps deep-merge)
 
+provider:                    # optional; default {type: anthropic}
+  type: bedrock              # anthropic | bedrock
+  region: us-east-1          # -> AWS_REGION (omit to use ambient AWS config)
+  baseUrl: https://…         # -> ANTHROPIC_BEDROCK_BASE_URL (gateway/VPC endpoint)
+  regionPrefix: global       # -> ANTHROPIC_BEDROCK_REGION_PREFIX
+  serviceTier: priority      # -> ANTHROPIC_BEDROCK_SERVICE_TIER
+  env:                       # extra runtime env; keys restricted to the
+    AWS_PROFILE: team        # AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces so a
+                             # shared profile cannot inject arbitrary env
+                             # (PATH, NODE_OPTIONS, …). Model pins
+                             # (ANTHROPIC_DEFAULT_*_MODEL) go here.
+
 models:                      # tier -> model id (or alias). Missing tiers
   scan: claude-haiku-4-5     # inherit from the extended profile.
   judge: claude-sonnet-4-5
@@ -69,6 +81,37 @@ the product; cost posture is expressed through models and depth):
 Model ids in shipped profiles use Claude aliases (e.g. `haiku`, `sonnet`,
 `opus`) rather than pinned versions, per the "model identifiers are versioned
 dependencies" practice; teams may pin in their own profiles.
+
+## Providers (Anthropic API vs Amazon Bedrock)
+
+Agents run through the Claude Code runtime, which supports multiple
+endpoints; shipshape selects one per profile via the `provider` block (or the
+`--bedrock` CLI shortcut, which flips `provider.type` on any profile) and
+configures it purely through the runtime's documented environment surface —
+`CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `ANTHROPIC_BEDROCK_BASE_URL`, etc.
+Shipshape never handles AWS credentials: they come from the invoking
+environment (AWS profile/SSO, access keys, or `AWS_BEARER_TOKEN_BEDROCK`),
+exactly as for any AWS tool.
+
+Because model aliases resolve per provider (on Bedrock they map to the
+runtime's built-in inference-profile defaults, overridable with
+`ANTHROPIC_DEFAULT_*_MODEL` pins in `provider.env`), the shipped profiles work
+unchanged on Bedrock; `examples/bedrock-profile.example.yaml` shows the
+recommended team setup with pinning. Since costs on Bedrock are billed by AWS
+at partner rates, treat the cost ledger's USD figures as estimates priced at
+Anthropic list rates.
+
+`provider.env` is part of the trust surface: `shipshape validate` and
+`report --dry-run` print the provider and the full env key=values a profile
+sets (a traffic redirect hides in a value). Keys are restricted to the
+AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces, with the known code-execution
+vectors inside them denied outright (`AWS_CONFIG_FILE`,
+`AWS_SHARED_CREDENTIALS_FILE`, `CLAUDE_CODE_GIT_BASH_PATH`); this reduces
+rather than eliminates the risk — see THREAT_MODEL.md item 6 — so
+third-party profiles still warrant review before running. The run manifest
+records the provider actually used (including a `--bedrock` flip), and
+`--resume`/`doctor` honor it over the profile file, so an interrupted
+Bedrock run never silently reverts to the Anthropic API.
 
 ## Team conventions steering
 

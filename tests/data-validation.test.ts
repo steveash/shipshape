@@ -45,6 +45,12 @@ describe('shipped profiles', () => {
     });
   }
 
+  it('the README-linked bedrock example profile resolves cleanly', () => {
+    const resolved = resolveProfile(join(ROOT, 'examples', 'bedrock-profile.example.yaml'));
+    expect(resolved.profile.provider.type).toBe('bedrock');
+    expect(resolved.warnings).toEqual([]);
+  });
+
   it('all three profiles run the same assessor set (cost posture only differs)', () => {
     const ids = (n: string): string[] =>
       resolveProfile(join(ROOT, 'profiles', `${n}.yaml`))

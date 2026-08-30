@@ -14,6 +14,11 @@ export interface AgentRunnerOptions {
   models: Record<ModelTier, string>;
   maxTurnsDefault: number;
   maxUsd: number | null;
+  /**
+   * Extra environment for the Claude Code subprocess (provider selection,
+   * e.g. Bedrock — see core/config.ts providerEnv). Merged over process.env.
+   */
+  extraEnv?: Record<string, string>;
   /** Called when the run-level budget ceiling is crossed. */
   onBudgetExceeded?: () => void;
 }
@@ -77,6 +82,11 @@ export class AgentRunner {
         // Do not load user/project Claude settings into shipshape's agents:
         // the target repo's CLAUDE.md must be evidence, not instructions.
         settingSources: [],
+        // The SDK's env REPLACES the subprocess environment entirely, so the
+        // ambient environment (PATH, AWS credentials, auth) must be spread in.
+        ...(this.opts.extraEnv && Object.keys(this.opts.extraEnv).length > 0
+          ? { env: { ...process.env, ...this.opts.extraEnv } }
+          : {}),
         ...(extraDirs.length > 0 ? { extraArgs: { 'add-dir': extraDirs.join(' ') } } : {}),
       },
     });

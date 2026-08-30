@@ -1,0 +1,39 @@
+# Example: run shipshape through Amazon Bedrock.
+#
+# Copy this next to your own profiles and run:
+#   shipshape report <repo> -p ./bedrock-profile.example.yaml
+# or skip the file entirely and use the shortcut on any profile:
+#   shipshape report <repo> --bedrock
+#
+# AWS credentials are NEVER handled by shipshape — they come from your
+# environment exactly as for any AWS tool: an AWS_PROFILE / SSO session,
+# access keys, or AWS_BEARER_TOKEN_BEDROCK (Bedrock API key). Shipshape only
+# sets the provider-selection environment for its agent runtime.
+name: bedrock-balanced
+extends: balanced
+
+provider:
+  type: bedrock
+  # All fields below are optional.
+  region: us-east-1 # omit to use your ambient AWS region config
+  # baseUrl: https://your-gateway.example.com   # custom endpoint / VPC gateway
+  # regionPrefix: global   # preferred cross-region inference profile prefix
+  # serviceTier: priority  # default | flex | priority
+  env:
+    # Optional extras (AWS_/ANTHROPIC_/CLAUDE_CODE_ keys only).
+    # AWS_PROFILE: my-bedrock-profile
+    #
+    # Model pinning: without pins the model aliases below resolve to the
+    # runtime's built-in Bedrock defaults, which can lag releases. Teams
+    # should pin inference-profile IDs and own the update cadence (pinned
+    # model IDs are versioned dependencies — review on model releases):
+    # ANTHROPIC_DEFAULT_OPUS_MODEL: us.anthropic.claude-opus-4-8
+    # ANTHROPIC_DEFAULT_SONNET_MODEL: us.anthropic.claude-sonnet-4-6
+    # ANTHROPIC_DEFAULT_HAIKU_MODEL: us.anthropic.claude-haiku-4-5-20251001-v1:0
+    {}
+
+# The model tiers stay as aliases (from the balanced profile) so the same
+# profile works on both providers; on Bedrock they resolve per the pins
+# above. You can also put explicit inference-profile IDs directly in models:
+# models:
+#   judge: us.anthropic.claude-sonnet-4-6

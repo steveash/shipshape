@@ -30,6 +30,29 @@ function profilePathFor(name: string): string {
   throw new Error(`profile not found: '${name}' (not a file, not a shipped profile)`);
 }
 
+/**
+ * The provider trust surface, printed identically by --dry-run and validate:
+ * full env values, not just keys — a traffic redirect (ANTHROPIC_BASE_URL,
+ * baseUrl) hides in a value, and a pre-flight is the reviewer's one chance
+ * to see it. Provider env is profile config, never secrets.
+ */
+function printProviderSurface(p: {
+  type: string;
+  region?: string;
+  baseUrl?: string;
+  env: Record<string, string>;
+}): void {
+  const parts = [p.type === 'bedrock' ? 'bedrock' : 'anthropic (default)'];
+  if (p.region) parts.push(`region=${p.region}`);
+  if (p.baseUrl) parts.push(`baseUrl=${p.baseUrl}`);
+  console.log(`provider: ${parts.join(' ')}`);
+  const entries = Object.entries(p.env);
+  if (entries.length > 0) {
+    console.log('sets runtime environment:');
+    for (const [k, v] of entries) console.log(`  ${k}=${v}`);
+  }
+}
+
 function makeRunId(): string {
   const d = new Date();
   const pad = (n: number): string => String(n).padStart(2, '0');
@@ -52,9 +75,24 @@ program
   .option('-o, --out <dir>', 'output directory root', './shipshape-out')
   .option('-r, --resume <runDir>', 'resume a previous run directory')
   .option('-a, --assessor <id...>', 'run only these assessors')
+  .option(
+    '--bedrock',
+    'run agents against Amazon Bedrock (shortcut for provider.type: bedrock; AWS credentials/region come from your environment)',
+  )
   .option('--dry-run', 'print the resolved plan without running agents')
   .action(async (paths: string[], opts) => {
     const resolved = resolveProfile(profilePathFor(opts.profile as string));
+    // On resume, the provider the run STARTED with wins over the profile
+    // file, so an interrupted --bedrock run can't silently revert to the
+    // Anthropic API mid-run. An explicit --bedrock flag still wins.
+    if (opts.resume) {
+      const manifestPath = join(resolve(opts.resume as string), 'run.json');
+      if (existsSync(manifestPath)) {
+        const prior = loadManifest(resolve(opts.resume as string));
+        if (prior.provider) resolved.profile.provider = prior.provider;
+      }
+    }
+    if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     for (const w of resolved.warnings) log.warn(w);
     for (const extra of (opts.conventions as string[] | undefined) ?? []) {
       const abs = resolve(extra);
@@ -66,6 +104,7 @@ program
 
     if (opts.dryRun) {
       console.log(`profile: ${resolved.profile.name} (${resolved.profile.path})`);
+      printProviderSurface(resolved.profile.provider);
       console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
       console.log(`targets:`);
       for (const t of targetSet.targets) {
@@ -102,6 +141,7 @@ program
   .description('Stage reviewed fix branches from a previous report run (local branches only)')
   .argument('<runDir>', 'a completed shipshape report run directory')
   .option('-a, --assessor <id...>', 'only stage fixes for these assessors')
+  .option('--bedrock', 'run agents against Amazon Bedrock (see report --bedrock)')
   .option('--max-branches <n>', 'cap the number of fix branches (default 20)', (v) =>
     parseInt(v, 10),
   )
@@ -109,6 +149,10 @@ program
     const runDir = resolve(runDirArg);
     const manifest = loadManifest(runDir);
     const resolved = resolveProfile(manifest.profilePath);
+    // The provider the report run used carries into doctor (see report
+    // --resume above); --bedrock still overrides explicitly.
+    if (manifest.provider) resolved.profile.provider = manifest.provider;
+    if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     const targetSet = resolveTargets(
       manifest.targets.map((t) => t.path),
       manifest.targets.find((t) => t.isMeta)?.path,
@@ -149,6 +193,7 @@ program
   .action((nameOrPath: string) => {
     const resolved = resolveProfile(profilePathFor(nameOrPath));
     console.log(`profile '${resolved.profile.name}' is valid.`);
+    printProviderSurface(resolved.profile.provider);
     console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
     for (const w of resolved.warnings) console.log(`WARN: ${w}`);
     const exec = resolved.assessors.filter((a) => a.needsExecution);
