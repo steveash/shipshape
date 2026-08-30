@@ -38,9 +38,21 @@ the user's repos.
    arbitrary code on the host. Run shipshape against untrusted repos only
    in a sandbox. This is the sharpest edge; say so in user-facing docs.
 5. **Secrets.** Shipshape adds no credential handling; the SDK inherits the
-   user's environment. Agents must never write env contents into reports;
+   user's environment (including AWS credentials when the Bedrock provider
+   is selected). Agents must never write env contents into reports;
    transcripts land in the run directory — treat run directories as
    potentially sensitive when assessing private repos.
+6. **Profile-controlled runtime environment.** A profile's `provider` block
+   sets environment for the agent runtime. Keys are restricted to the
+   AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces (`src/core/config.ts`), so a
+   shared profile cannot inject PATH/NODE_OPTIONS-class variables — but the
+   allowed namespaces still steer where traffic goes
+   (`ANTHROPIC_BEDROCK_BASE_URL`, `provider.baseUrl`) and which models run.
+   A malicious profile could route agent traffic (and thus repo content) to
+   an attacker-controlled gateway. This is the same trust class as the rest
+   of the profile (assessor prompts): review third-party profiles before
+   running; `shipshape validate` prints the provider, baseUrl, and env keys
+   as part of the trust surface.
 
 ## Review checklist for security-relevant diffs
 

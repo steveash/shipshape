@@ -30,6 +30,14 @@ function profilePathFor(name: string): string {
   throw new Error(`profile not found: '${name}' (not a file, not a shipped profile)`);
 }
 
+function describeProvider(p: { type: string; region?: string; baseUrl?: string }): string {
+  if (p.type !== 'bedrock') return 'anthropic (default)';
+  const parts = ['bedrock'];
+  if (p.region) parts.push(`region=${p.region}`);
+  if (p.baseUrl) parts.push(`baseUrl=${p.baseUrl}`);
+  return parts.join(' ');
+}
+
 function makeRunId(): string {
   const d = new Date();
   const pad = (n: number): string => String(n).padStart(2, '0');
@@ -52,9 +60,14 @@ program
   .option('-o, --out <dir>', 'output directory root', './shipshape-out')
   .option('-r, --resume <runDir>', 'resume a previous run directory')
   .option('-a, --assessor <id...>', 'run only these assessors')
+  .option(
+    '--bedrock',
+    'run agents against Amazon Bedrock (shortcut for provider.type: bedrock; AWS credentials/region come from your environment)',
+  )
   .option('--dry-run', 'print the resolved plan without running agents')
   .action(async (paths: string[], opts) => {
     const resolved = resolveProfile(profilePathFor(opts.profile as string));
+    if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     for (const w of resolved.warnings) log.warn(w);
     for (const extra of (opts.conventions as string[] | undefined) ?? []) {
       const abs = resolve(extra);
@@ -66,6 +79,7 @@ program
 
     if (opts.dryRun) {
       console.log(`profile: ${resolved.profile.name} (${resolved.profile.path})`);
+      console.log(`provider: ${describeProvider(resolved.profile.provider)}`);
       console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
       console.log(`targets:`);
       for (const t of targetSet.targets) {
@@ -102,6 +116,7 @@ program
   .description('Stage reviewed fix branches from a previous report run (local branches only)')
   .argument('<runDir>', 'a completed shipshape report run directory')
   .option('-a, --assessor <id...>', 'only stage fixes for these assessors')
+  .option('--bedrock', 'run agents against Amazon Bedrock (see report --bedrock)')
   .option('--max-branches <n>', 'cap the number of fix branches (default 20)', (v) =>
     parseInt(v, 10),
   )
@@ -109,6 +124,7 @@ program
     const runDir = resolve(runDirArg);
     const manifest = loadManifest(runDir);
     const resolved = resolveProfile(manifest.profilePath);
+    if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     const targetSet = resolveTargets(
       manifest.targets.map((t) => t.path),
       manifest.targets.find((t) => t.isMeta)?.path,
@@ -149,7 +165,12 @@ program
   .action((nameOrPath: string) => {
     const resolved = resolveProfile(profilePathFor(nameOrPath));
     console.log(`profile '${resolved.profile.name}' is valid.`);
+    console.log(`provider: ${describeProvider(resolved.profile.provider)}`);
     console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
+    const envKeys = Object.keys(resolved.profile.provider.env);
+    if (envKeys.length > 0) {
+      console.log(`sets runtime environment: ${envKeys.join(', ')} (review values before running)`);
+    }
     for (const w of resolved.warnings) console.log(`WARN: ${w}`);
     const exec = resolved.assessors.filter((a) => a.needsExecution);
     const fix = resolved.assessors.filter((a) => a.hasFix);
