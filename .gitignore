@@ -6,11 +6,3 @@ shipshape-out/
 # Tool-personal agent files stay local; AGENTS.md is the committed canonical doc.
 CLAUDE.local.md
 .claude/settings.local.json
-
-# A self-assessment run (`report`/`doctor` invoked against this repo itself
-# without -o) can spill its output at repo root instead of shipshape-out/
-# (see README.md's documented `shipshape-out/<run-id>/` convention). Anchored
-# to root so it doesn't shadow legitimate subdirectory resources/ folders
-# (e.g. per-assessor resource dirs).
-/report.md
-/resources/
