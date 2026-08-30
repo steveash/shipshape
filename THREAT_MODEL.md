@@ -44,10 +44,15 @@ the user's repos.
    potentially sensitive when assessing private repos.
 6. **Profile-controlled runtime environment.** A profile's `provider` block
    sets environment for the agent runtime. Keys are restricted to the
-   AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces (`src/core/config.ts`), so a
-   shared profile cannot inject PATH/NODE_OPTIONS-class variables — but the
-   allowed namespaces still steer where traffic goes
-   (`ANTHROPIC_BEDROCK_BASE_URL`, `provider.baseUrl`) and which models run.
+   AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces, and the known code-execution
+   vectors inside those namespaces (`AWS_CONFIG_FILE` /
+   `AWS_SHARED_CREDENTIALS_FILE`, whose targets can carry
+   `credential_process = <command>`, and `CLAUDE_CODE_GIT_BASH_PATH`) are
+   denied outright (`src/core/config.ts`). This reduces, not eliminates,
+   the surface: the allowed namespaces still steer where traffic goes
+   (`ANTHROPIC_BEDROCK_BASE_URL`, `ANTHROPIC_BASE_URL`, `provider.baseUrl`)
+   and which models run, and new runtime variables can appear in these
+   namespaces faster than a denylist follows.
    A malicious profile could route agent traffic (and thus repo content) to
    an attacker-controlled gateway. This is the same trust class as the rest
    of the profile (assessor prompts): review third-party profiles before

@@ -30,12 +30,27 @@ function profilePathFor(name: string): string {
   throw new Error(`profile not found: '${name}' (not a file, not a shipped profile)`);
 }
 
-function describeProvider(p: { type: string; region?: string; baseUrl?: string }): string {
-  if (p.type !== 'bedrock') return 'anthropic (default)';
-  const parts = ['bedrock'];
+/**
+ * The provider trust surface, printed identically by --dry-run and validate:
+ * full env values, not just keys — a traffic redirect (ANTHROPIC_BASE_URL,
+ * baseUrl) hides in a value, and a pre-flight is the reviewer's one chance
+ * to see it. Provider env is profile config, never secrets.
+ */
+function printProviderSurface(p: {
+  type: string;
+  region?: string;
+  baseUrl?: string;
+  env: Record<string, string>;
+}): void {
+  const parts = [p.type === 'bedrock' ? 'bedrock' : 'anthropic (default)'];
   if (p.region) parts.push(`region=${p.region}`);
   if (p.baseUrl) parts.push(`baseUrl=${p.baseUrl}`);
-  return parts.join(' ');
+  console.log(`provider: ${parts.join(' ')}`);
+  const entries = Object.entries(p.env);
+  if (entries.length > 0) {
+    console.log('sets runtime environment:');
+    for (const [k, v] of entries) console.log(`  ${k}=${v}`);
+  }
 }
 
 function makeRunId(): string {
@@ -67,6 +82,16 @@ program
   .option('--dry-run', 'print the resolved plan without running agents')
   .action(async (paths: string[], opts) => {
     const resolved = resolveProfile(profilePathFor(opts.profile as string));
+    // On resume, the provider the run STARTED with wins over the profile
+    // file, so an interrupted --bedrock run can't silently revert to the
+    // Anthropic API mid-run. An explicit --bedrock flag still wins.
+    if (opts.resume) {
+      const manifestPath = join(resolve(opts.resume as string), 'run.json');
+      if (existsSync(manifestPath)) {
+        const prior = loadManifest(resolve(opts.resume as string));
+        if (prior.provider) resolved.profile.provider = prior.provider;
+      }
+    }
     if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     for (const w of resolved.warnings) log.warn(w);
     for (const extra of (opts.conventions as string[] | undefined) ?? []) {
@@ -79,7 +104,7 @@ program
 
     if (opts.dryRun) {
       console.log(`profile: ${resolved.profile.name} (${resolved.profile.path})`);
-      console.log(`provider: ${describeProvider(resolved.profile.provider)}`);
+      printProviderSurface(resolved.profile.provider);
       console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
       console.log(`targets:`);
       for (const t of targetSet.targets) {
@@ -124,6 +149,9 @@ program
     const runDir = resolve(runDirArg);
     const manifest = loadManifest(runDir);
     const resolved = resolveProfile(manifest.profilePath);
+    // The provider the report run used carries into doctor (see report
+    // --resume above); --bedrock still overrides explicitly.
+    if (manifest.provider) resolved.profile.provider = manifest.provider;
     if (opts.bedrock) resolved.profile.provider.type = 'bedrock';
     const targetSet = resolveTargets(
       manifest.targets.map((t) => t.path),
@@ -165,16 +193,8 @@ program
   .action((nameOrPath: string) => {
     const resolved = resolveProfile(profilePathFor(nameOrPath));
     console.log(`profile '${resolved.profile.name}' is valid.`);
-    console.log(`provider: ${describeProvider(resolved.profile.provider)}`);
+    printProviderSurface(resolved.profile.provider);
     console.log(`models: ${JSON.stringify(resolved.profile.models)}`);
-    const envEntries = Object.entries(resolved.profile.provider.env);
-    if (envEntries.length > 0) {
-      // Full values, not just keys: a traffic redirect hides in the value
-      // (e.g. ANTHROPIC_BASE_URL), and this is the reviewer's one chance to
-      // see it. Provider env is profile config, never secrets.
-      console.log('sets runtime environment:');
-      for (const [k, v] of envEntries) console.log(`  ${k}=${v}`);
-    }
     for (const w of resolved.warnings) console.log(`WARN: ${w}`);
     const exec = resolved.assessors.filter((a) => a.needsExecution);
     const fix = resolved.assessors.filter((a) => a.hasFix);

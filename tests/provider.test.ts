@@ -45,6 +45,44 @@ provider:
     });
   });
 
+  it('rejects in-namespace env keys that are code-execution vectors', () => {
+    const dir = tmp();
+    writeFileSync(
+      join(dir, 'p.yaml'),
+      `name: p
+provider:
+  type: bedrock
+  env:
+    AWS_CONFIG_FILE: /tmp/evil-config
+`,
+    );
+    expect(() => loadProfile(join(dir, 'p.yaml'))).toThrow(/must not set/);
+  });
+
+  it("a child provider block without 'type' keeps the parent's bedrock type", () => {
+    const dir = tmp();
+    writeFileSync(
+      join(dir, 'base.yaml'),
+      `name: base
+provider:
+  type: bedrock
+  region: us-east-1
+`,
+    );
+    writeFileSync(
+      join(dir, 'child.yaml'),
+      `name: child
+extends: ./base.yaml
+provider:
+  env:
+    ANTHROPIC_DEFAULT_HAIKU_MODEL: us.anthropic.claude-haiku-4-5-20251001-v1:0
+`,
+    );
+    const p = loadProfile(join(dir, 'child.yaml'));
+    expect(p.provider.type).toBe('bedrock');
+    expect(providerEnv(p.provider).CLAUDE_CODE_USE_BEDROCK).toBe('1');
+  });
+
   it('rejects env keys outside the provider namespaces', () => {
     const dir = tmp();
     writeFileSync(

@@ -460,6 +460,7 @@ function writeManifest(opts: ReportRunOptions): void {
     targets: opts.targetSet.targets.map((t) => ({ path: t.path, name: t.name, isMeta: t.isMeta })),
     profileName: opts.resolved.profile.name,
     profilePath: opts.resolved.profile.path,
+    provider: opts.resolved.profile.provider,
     models: opts.resolved.profile.models,
     conventions: opts.resolved.profile.conventions,
     assessorIds: opts.resolved.assessors.map((a) => a.id),

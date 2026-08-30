@@ -42,11 +42,23 @@ const profileAssessorSchema = z.object({
 // A profile can set extra env for the agent runtime, but only within the
 // provider-configuration namespaces. Arbitrary env injection from a profile
 // file (PATH, NODE_OPTIONS, ...) would let a shared profile execute code or
-// redirect traffic — this allowlist keeps the surface reviewable.
+// redirect traffic — this allowlist keeps the surface reviewable. It reduces
+// rather than eliminates the risk (see THREAT_MODEL.md item 6), so the keys
+// inside the namespaces that are themselves code-execution vectors are
+// denied outright: AWS_CONFIG_FILE / AWS_SHARED_CREDENTIALS_FILE can point
+// at a config with `credential_process = <command>`, and
+// CLAUDE_CODE_GIT_BASH_PATH names an executable the runtime will run.
 const PROVIDER_ENV_PREFIXES = ['AWS_', 'ANTHROPIC_', 'CLAUDE_CODE_'];
+const PROVIDER_ENV_DENIED = [
+  'AWS_CONFIG_FILE',
+  'AWS_SHARED_CREDENTIALS_FILE',
+  'CLAUDE_CODE_GIT_BASH_PATH',
+];
 
 const providerSchema = z.object({
-  type: z.enum(['anthropic', 'bedrock']).default('anthropic'),
+  // Optional (no zod default): a child layer that omits `type` must not
+  // clobber the parent's choice during extends merging.
+  type: z.enum(['anthropic', 'bedrock']).optional(),
   region: z.string().optional(),
   baseUrl: z.string().url().optional(),
   regionPrefix: z.string().optional(),
@@ -59,7 +71,10 @@ const providerSchema = z.object({
       {
         message: `provider.env keys must start with one of: ${PROVIDER_ENV_PREFIXES.join(', ')}`,
       },
-    ),
+    )
+    .refine((env) => Object.keys(env).every((k) => !PROVIDER_ENV_DENIED.includes(k)), {
+      message: `provider.env must not set ${PROVIDER_ENV_DENIED.join(', ')} (code-execution vectors; set them in your own shell environment instead)`,
+    }),
 });
 
 const profileYamlSchema = z.object({
@@ -170,7 +185,7 @@ export function loadProfile(path: string): Profile {
     if (layer.provider) {
       // Field-level merge so a child can flip provider type or add one env
       // var without restating the parent's whole block.
-      provider.type = layer.provider.type;
+      if (layer.provider.type !== undefined) provider.type = layer.provider.type;
       if (layer.provider.region !== undefined) provider.region = layer.provider.region;
       if (layer.provider.baseUrl !== undefined) provider.baseUrl = layer.provider.baseUrl;
       if (layer.provider.regionPrefix !== undefined)

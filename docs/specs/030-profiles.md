@@ -101,10 +101,17 @@ recommended team setup with pinning. Since costs on Bedrock are billed by AWS
 at partner rates, treat the cost ledger's USD figures as estimates priced at
 Anthropic list rates.
 
-`provider.env` is part of the trust surface: `shipshape validate` prints the
-keys a profile sets, and keys are restricted to the AWS_/ANTHROPIC_/
-CLAUDE_CODE_ namespaces so a shared profile cannot inject arbitrary
-environment into the agent runtime.
+`provider.env` is part of the trust surface: `shipshape validate` and
+`report --dry-run` print the provider and the full env key=values a profile
+sets (a traffic redirect hides in a value). Keys are restricted to the
+AWS_/ANTHROPIC_/CLAUDE_CODE_ namespaces, with the known code-execution
+vectors inside them denied outright (`AWS_CONFIG_FILE`,
+`AWS_SHARED_CREDENTIALS_FILE`, `CLAUDE_CODE_GIT_BASH_PATH`); this reduces
+rather than eliminates the risk — see THREAT_MODEL.md item 6 — so
+third-party profiles still warrant review before running. The run manifest
+records the provider actually used (including a `--bedrock` flip), and
+`--resume`/`doctor` honor it over the profile file, so an interrupted
+Bedrock run never silently reverts to the Anthropic API.
 
 ## Team conventions steering
 

@@ -103,6 +103,13 @@ export interface RunManifest {
   targets: { path: string; name: string; isMeta: boolean }[];
   profileName: string;
   profilePath: string;
+  /**
+   * The provider the run actually used (including a --bedrock CLI flip).
+   * Resume and doctor honor this over the profile file so an interrupted
+   * Bedrock run can never silently revert to the Anthropic API. Absent on
+   * manifests from older versions.
+   */
+  provider?: ProviderConfig;
   models: Record<ModelTier, string>;
   conventions: string[];
   assessorIds: string[];
